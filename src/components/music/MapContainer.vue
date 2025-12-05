@@ -5,21 +5,37 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 
+const kakaoKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY
 
-var container = document.getElementById('map') //지도를 담을 영역의 DOM 레퍼런스
-var options = {
-  //지도를 생성할 때 필요한 기본 옵션
-  center: new kakao.maps.LatLng(33.450701, 126.570667), //지도의 중심좌표.
-  level: 3, //지도의 레벨(확대, 축소 정도)
+const initMap = function () {
+  const container = document.getElementById('map')
+  const options = {
+    // eslint-disable-next-line
+    center: new kakao.maps.LatLng(37.5665, 126.978),
+    level: 3,
+  }
+
+  // eslint-disable-next-line
+  const map = new kakao.maps.Map(container, options)
 }
 
-var map = new kakao.maps.Map(container, options) //지도 생성 및 객체 리턴
+onMounted(() => {
+  // 이미 SDK가 로드되어 있다면 그대로 사용
+  if (window.kakao && window.kakao.maps) {
+    initMap()
+  } else {
+    // 아직 로드 안 됨 → script 로드
+    const script = document.createElement('script')
+    script.src = `http://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoKey}`
+    script.onload = () => {
+      // eslint-disable-next-line
+      kakao.maps.load(initMap)
+    }
+    document.head.appendChild(script)
+  }
+})
 </script>
-
-<script
-  type="text/javascript"
-  src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1af9ff4b5b10fa620ce6987e79cfd070"
-></script>
 
 <style lang="scss" scoped></style>

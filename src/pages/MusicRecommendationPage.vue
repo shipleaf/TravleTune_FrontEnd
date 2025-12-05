@@ -3,6 +3,11 @@
     <p class="eyebrow">Music</p>
     <h1>장소 기반 음악 추천</h1>
     <p class="lead">현재 위치와 목적지 분위기에 맞는 음악을 받아보세요.</p>
+    <AlbumScene />
+    <MapContainer />
+    <button @click="loginWithSpotify">Spotify로 로그인</button>
+    <p v-if="accessToken">토큰 있음 ✅</p>
+    <MusicPlayerContainer v-if="store.accessToken" />
 
     <div class="panel-grid">
       <div class="panel">
@@ -32,6 +37,7 @@
           </label>
         </form>
       </div>
+
       <div class="panel">
         <h2>추천 플레이리스트</h2>
         <ul class="list">
@@ -44,3 +50,19 @@
     </div>
   </section>
 </template>
+
+<script setup>
+import MapContainer from '@/components/music/MapContainer.vue'
+import AlbumScene from '@/components/music/AlbumScene.vue'
+import MusicPlayerContainer from '@/components/music/MusicPlayerContainer.vue'
+import { useSpotifyStore } from '@/stores/spotify'
+import { storeToRefs } from 'pinia'
+
+const store = useSpotifyStore()
+
+const { accessToken } = storeToRefs(store)
+
+function loginWithSpotify() {
+  window.location.href = 'http://localhost:3001/login'
+}
+</script>

@@ -1,5 +1,8 @@
-﻿<script setup>
-import { computed } from 'vue'
+<script setup>
+import { computed, ref } from 'vue'
+import { login, signup } from '@/api/auth'
+import LoginForm from '@/components/auth/LoginForm.vue'
+import SignupForm from '@/components/auth/SignupForm.vue'
 
 const props = defineProps({
   mode: { type: String, default: 'login' },
@@ -8,9 +11,63 @@ const props = defineProps({
 const title = computed(() => (props.mode === 'signup' ? '회원가입' : '로그인'))
 const description = computed(() =>
   props.mode === 'signup'
-    ? '새 계정을 만들고 일정과 취향을 저장하세요.'
-    : '등록된 이메일로 로그인해 여정을 이어가세요.',
+    ? '필수 정보를 입력하고 바로 회원가입을 진행해보세요.'
+    : '등록된 이메일과 비밀번호로 로그인 후 이동합니다.',
 )
+
+const loading = ref(false)
+const message = ref('')
+const error = ref('')
+const signupFormRef = ref(null)
+
+const resetStatus = () => {
+  message.value = ''
+  error.value = ''
+}
+
+const handleLogin = async ({ email, password }) => {
+  resetStatus()
+
+  if (!email || !password) {
+    error.value = '이메일과 비밀번호를 입력해주세요.'
+    return
+  }
+
+  loading.value = true
+  try {
+    await login({ email, password })
+    message.value = '로그인에 성공했어요.'
+  } catch (err) {
+    error.value = err?.response?.data?.message || '로그인에 실패했어요.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleSignup = async ({ email, password, confirmPassword }) => {
+  resetStatus()
+
+  if (!email || !password || !confirmPassword) {
+    error.value = '모든 항목을 입력해주세요.'
+    return
+  }
+
+  if (password !== confirmPassword) {
+    error.value = '비밀번호가 일치하지 않습니다.'
+    return
+  }
+
+  loading.value = true
+  try {
+    await signup({ email, password })
+    message.value = '회원가입에 성공했어요. 로그인해주세요.'
+    signupFormRef.value?.resetPasswords()
+  } catch (err) {
+    error.value = err?.response?.data?.message || '회원가입에 실패했어요.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -22,38 +79,18 @@ const description = computed(() =>
     <div class="panel-grid">
       <div class="panel">
         <h2>로그인</h2>
-        <p class="subtle">이미 계정이 있다면 이메일과 비밀번호로 로그인하세요.</p>
-        <form class="form">
-          <label>
-            이메일
-            <input type="email" placeholder="you@example.com" />
-          </label>
-          <label>
-            비밀번호
-            <input type="password" placeholder="••••••••" />
-          </label>
-          <button type="button" class="btn primary">로그인</button>
-        </form>
+        <p class="subtle">등록된 이메일과 비밀번호로 로그인하세요.</p>
+        <LoginForm :loading="loading" @submit="handleLogin" />
       </div>
       <div class="panel">
         <h2>회원가입</h2>
-        <p class="subtle">새 계정을 만들고 맞춤형 추천을 받아보세요.</p>
-        <form class="form">
-          <label>
-            이메일
-            <input type="email" placeholder="you@example.com" />
-          </label>
-          <label>
-            비밀번호
-            <input type="password" placeholder="최소 8자" />
-          </label>
-          <label>
-            비밀번호 확인
-            <input type="password" placeholder="다시 입력" />
-          </label>
-          <button type="button" class="btn ghost">회원가입</button>
-        </form>
+        <p class="subtle">필수 정보를 입력하고 맞춤 추천을 받아보세요.</p>
+        <SignupForm ref="signupFormRef" :loading="loading" @submit="handleSignup" />
       </div>
+    </div>
+    <div v-if="message || error" class="panel">
+      <p v-if="message" class="subtle">{{ message }}</p>
+      <p v-if="error" class="subtle" style="color: #d14343">{{ error }}</p>
     </div>
   </section>
 </template>

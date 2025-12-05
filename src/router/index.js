@@ -5,6 +5,7 @@ import ExtraInfoPage from '../pages/ExtraInfoPage.vue'
 import TravelPlanPage from '../pages/TravelPlanPage.vue'
 import MusicRecommendationPage from '../pages/MusicRecommendationPage.vue'
 import MyPage from '../pages/MyPage.vue'
+import SpotifySuccess from '@/pages/SpotifySuccess.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +46,11 @@ const router = createRouter({
       path: '/mypage',
       name: 'mypage',
       component: MyPage,
+    },
+    {
+      path: '/spotify-success',
+      name: 'spotify-success',
+      component: SpotifySuccess,
     },
   ],
 })
