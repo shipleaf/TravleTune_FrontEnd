@@ -57,7 +57,9 @@ import { RouterLink, RouterView } from 'vue-router'
   text-decoration: none;
   padding: 0.5rem 0.75rem;
   border-radius: 0.75rem;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .nav a.router-link-active {
@@ -70,6 +72,10 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .app-main {
-  padding: 2rem 1.5rem 3rem;
+  width: 100%;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
 }
 </style>

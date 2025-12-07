@@ -2,29 +2,17 @@
   <div class="scene-wrapper" ref="wrapperRef">
     <!-- Three.js 캔버스 -->
     <canvas ref="canvasRef" id="scene"></canvas>
-
-    <!-- 플레이어 UI (오버레이) -->
-    <div ref="playerUIRef" id="player-ui" class="player-ui">
-      <div class="player-header">
-        <button class="back-btn" @click="resetSelection">Back</button>
-      </div>
-      <div class="player-body">
-        <!-- 곡 정보 등 원하는 UI 넣기 -->
-        <div class="progress-bar-outer">
-          <div ref="progressRef" id="progress" class="progress-bar-inner"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 실제 오디오 -->
-    <audio ref="audioRef" id="audio" src="/audio/sample.mp3"></audio>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import * as THREE from 'three'
 import gsap from 'gsap'
+
+const props = defineProps({
+  selectedPlace: Object,
+})
 
 // ====== 템플릿 ref ======
 const canvasRef = ref(null)
@@ -70,6 +58,9 @@ const albums = [
   { texture: '/src/assets/img/album10.jpg' },
 ]
 
+const textureLoader = new THREE.TextureLoader()
+let bgTexture = null
+
 // ====== 초기화 함수들 ======
 function initThree() {
   const canvas = canvasRef.value
@@ -82,7 +73,6 @@ function initThree() {
   renderer.setSize(clientWidth, clientHeight)
 
   scene = new THREE.Scene()
-  scene.background = new THREE.Color(0xffffff)
 
   camera = new THREE.PerspectiveCamera(50, clientWidth / clientHeight, 0.1, 100)
   camera.position.set(0, 1.6, 6)
@@ -93,6 +83,34 @@ function initThree() {
   light = new THREE.DirectionalLight(0xffffff, 1.4)
   light.position.set(2, 4, 5)
   scene.add(light)
+}
+
+function setSceneBackground(url) {
+  if (!scene || !url) return
+
+  textureLoader.load(
+    url,
+    (texture) => {
+      // sRGB 보정 (Three r152 기준)
+      if (texture.colorSpace !== undefined) {
+        texture.colorSpace = THREE.SRGBColorSpace
+      } else {
+        texture.encoding = THREE.sRGBEncoding
+      }
+
+      // 이전 텍스처 정리
+      if (bgTexture) {
+        bgTexture.dispose()
+      }
+      bgTexture = texture
+
+      scene.background = texture
+    },
+    undefined,
+    (err) => {
+      console.error('배경 텍스처 로드 실패:', err)
+    },
+  )
 }
 
 function createAlbums() {
@@ -336,73 +354,73 @@ function handleResize() {
 }
 
 // ====== 되돌리기(Back 버튼) ======
-function resetSelection() {
-  if (!selectedMesh) return
+// function resetSelection() {
+//   if (!selectedMesh) return
 
-  const audio = audioRef.value
-  const playerUI = playerUIRef.value
+//   const audio = audioRef.value
+//   const playerUI = playerUIRef.value
 
-  if (lpSpinTween) {
-    lpSpinTween.kill()
-    lpSpinTween = null
-  }
+//   if (lpSpinTween) {
+//     lpSpinTween.kill()
+//     lpSpinTween = null
+//   }
 
-  gsap.to(lpGroup.position, {
-    x: -1,
-    duration: 0.5,
-    ease: 'power3.in',
-    onComplete: () => {
-      ;((lpGroup.visible = false), (lpGroup.rotation.z = 0))
+//   gsap.to(lpGroup.position, {
+//     x: -1,
+//     duration: 0.5,
+//     ease: 'power3.in',
+//     onComplete: () => {
+//       ;((lpGroup.visible = false), (lpGroup.rotation.z = 0))
 
-      const originalPos = selectedMesh.userData.originalPosition
-      if (originalPos) {
-        gsap.to(selectedMesh.position, {
-          x: originalPos.x,
-          y: originalPos.y,
-          z: originalPos.z,
-          duration: 0.6,
-          ease: 'power3.inOut',
-        })
-      }
+//       const originalPos = selectedMesh.userData.originalPosition
+//       if (originalPos) {
+//         gsap.to(selectedMesh.position, {
+//           x: originalPos.x,
+//           y: originalPos.y,
+//           z: originalPos.z,
+//           duration: 0.6,
+//           ease: 'power3.inOut',
+//         })
+//       }
 
-      // 앨범 opacity 복구
-      gsap.to(
-        albumMeshes.map((m) => m.material),
-        {
-          opacity: 1,
-          duration: 0.4,
-          stagger: 0.02,
-        },
-      )
+//       // 앨범 opacity 복구
+//       gsap.to(
+//         albumMeshes.map((m) => m.material),
+//         {
+//           opacity: 1,
+//           duration: 0.4,
+//           stagger: 0.02,
+//         },
+//       )
 
-      // 카메라 복구
-      if (initialCameraPosition) {
-        gsap.to(camera.position, {
-          x: initialCameraPosition.x,
-          y: initialCameraPosition.y,
-          z: initialCameraPosition.z,
-          duration: 0.6,
-          ease: 'power3.inOut',
-        })
-      }
+//       // 카메라 복구
+//       if (initialCameraPosition) {
+//         gsap.to(camera.position, {
+//           x: initialCameraPosition.x,
+//           y: initialCameraPosition.y,
+//           z: initialCameraPosition.z,
+//           duration: 0.6,
+//           ease: 'power3.inOut',
+//         })
+//       }
 
-      // UI 숨기고 음악 정지
-      if (playerUI) {
-        gsap.to(playerUI, {
-          opacity: 0,
-          transform: 'translateX(20px)',
-          duration: 0.4,
-        })
-      }
-      if (audio) {
-        audio.pause()
-        audio.currentTime = 0
-      }
+//       // UI 숨기고 음악 정지
+//       if (playerUI) {
+//         gsap.to(playerUI, {
+//           opacity: 0,
+//           transform: 'translateX(20px)',
+//           duration: 0.4,
+//         })
+//       }
+//       if (audio) {
+//         audio.pause()
+//         audio.currentTime = 0
+//       }
 
-      selectedMesh = null
-    },
-  })
-}
+//       selectedMesh = null
+//     },
+//   })
+// }
 
 // ====== 애니메이션 루프 ======
 function animate() {
@@ -416,10 +434,22 @@ onMounted(() => {
   initThree()
   createAlbums()
   createLP()
+
+  console.log('selectedPlace in AlbumScene:', props.selectedPlace)
+
+  if (props.selectedPlace?.image) {
+    console.log('try set background:', props.selectedPlace.image)
+    setSceneBackground(props.selectedPlace.image)
+  }
+
   animate()
 
-  window.addEventListener('click', handleClick)
-  window.addEventListener('mousemove', handleMouseMove)
+  const canvas = canvasRef.value
+  if (canvas) {
+    canvas.addEventListener('click', handleClick)
+    canvas.addEventListener('mousemove', handleMouseMove)
+  }
+
   window.addEventListener('resize', handleResize)
 })
 
@@ -432,6 +462,16 @@ onBeforeUnmount(() => {
     cancelAnimationFrame(animationId)
   }
 })
+
+watch(
+  () => props.selectedPlace?.image,
+  (newUrl) => {
+    if (newUrl) {
+      setSceneBackground(newUrl)
+    }
+  },
+  { immediate: false },
+)
 </script>
 
 <style scoped>
