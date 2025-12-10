@@ -1,7 +1,5 @@
 <template>
   <div id="container">
-    <div id="searchSideBar">검색 결과</div>
-
     <div id="mapContainer">
       <div id="map"></div>
       <Transition name="sheet">
@@ -84,22 +82,19 @@ onMounted(() => {
 <style lang="scss" scoped>
 #container {
   width: 100%;
+  height: 100%;
   display: flex;
 }
 
-#searchSideBar {
-  width: 22%;
-  border-right: 1px solid #ddd;
-}
-
 #mapContainer {
-  position: relative; // ⭐ 오버레이를 위해 필요
+  height: 100%;
+  position: relative;
   display: flex;
   flex: 1;
 }
 
 #map {
-  height: 90vh;
+  height: 100%;
   flex: 1;
 }
 

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { login, signup } from '@/api/authApi'
+import { login, signup } from '@/api/memberApi'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import SignupForm from '@/components/auth/SignupForm.vue'
 
