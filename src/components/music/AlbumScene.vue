@@ -2,24 +2,62 @@
   <div class="scene-wrapper" ref="wrapperRef">
     <!-- Three.js 캔버스 -->
     <canvas ref="canvasRef" id="scene"></canvas>
+    <div class="player-container" ref="playerContainerRef">
+      <MusicPlayerContainer v-if="store.accessToken && showPlayerUI" :tracks="tracks" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
+import MusicPlayerContainer from './MusicPlayerContainer.vue'
 import * as THREE from 'three'
 import gsap from 'gsap'
+import { useSpotifyStore } from '@/stores/spotify'
+
+const store = useSpotifyStore()
+
+const tracks = ref([])
+
+// 🔹 Spotify 추천/검색 API 호출을 여기로 이동
+async function loadTracks() {
+  try {
+    const res = await fetch('http://localhost:3001/api/recommend')
+    const data = await res.json()
+
+    let pk = 1
+
+    tracks.value = data.tracks.items.map((t) => ({
+      pk: pk++,
+      id: t.id,
+      title: t.name,
+      artist: t.artists.map((a) => a.name).join(', '),
+      albumImage: t.album?.images?.[0]?.url || '',
+      previewUrl: t.preview_url ?? 'https://samplelib.com/lib/preview/mp3/sample-3s.mp3',
+      hasPreview: !!t.preview_url,
+      mood: 'search',
+      location: 'Spotify',
+      spotifyUri: t.uri,
+    }))
+  } catch (err) {
+    console.error('Spotify fetch error:', err)
+  }
+}
 
 const props = defineProps({
   selectedPlace: Object,
+  selectedSpot: Object,
 })
 
 // ====== 템플릿 ref ======
 const canvasRef = ref(null)
-const playerUIRef = ref(null)
 const progressRef = ref(null)
 const audioRef = ref(null)
 const wrapperRef = ref(null)
+
+const showPlayerUI = ref(false)
+
+const playerContainerRef = ref(null)
 
 // ====== Three.js 관련 전역 변수 ======
 let renderer
@@ -44,23 +82,6 @@ let animationId = null
 // 카메라 초기 위치 저장용
 let initialCameraPosition = null
 
-// ====== 앨범 데이터 ======
-const albums = [
-  { texture: '/src/assets/img/album1.jpg' },
-  { texture: '/src/assets/img/album2.jpg' },
-  { texture: '/src/assets/img/album3.jpg' },
-  { texture: '/src/assets/img/album4.jpg' },
-  { texture: '/src/assets/img/album5.jpg' },
-  { texture: '/src/assets/img/album6.jpg' },
-  { texture: '/src/assets/img/album7.jpg' },
-  { texture: '/src/assets/img/album8.jpg' },
-  { texture: '/src/assets/img/album9.jpg' },
-  { texture: '/src/assets/img/album10.jpg' },
-]
-
-const textureLoader = new THREE.TextureLoader()
-let bgTexture = null
-
 // ====== 초기화 함수들 ======
 function initThree() {
   const canvas = canvasRef.value
@@ -83,44 +104,35 @@ function initThree() {
   light = new THREE.DirectionalLight(0xffffff, 1.4)
   light.position.set(2, 4, 5)
   scene.add(light)
-}
 
-function setSceneBackground(url) {
-  if (!scene || !url) return
-
-  textureLoader.load(
-    url,
-    (texture) => {
-      // sRGB 보정 (Three r152 기준)
-      if (texture.colorSpace !== undefined) {
-        texture.colorSpace = THREE.SRGBColorSpace
-      } else {
-        texture.encoding = THREE.sRGBEncoding
-      }
-
-      // 이전 텍스처 정리
-      if (bgTexture) {
-        bgTexture.dispose()
-      }
-      bgTexture = texture
-
-      scene.background = texture
-    },
-    undefined,
-    (err) => {
-      console.error('배경 텍스처 로드 실패:', err)
-    },
-  )
+  scene.background = null
+  renderer.setClearColor(0x000000, 0)
 }
 
 function createAlbums() {
-  const loader = new THREE.TextureLoader()
+  if (!tracks.value.length) return
 
-  albums.forEach((album, idx) => {
-    const tex = loader.load(album.texture)
+  const loader = new THREE.TextureLoader()
+  loader.setCrossOrigin('anonymous')
+
+  albumMeshes.forEach((m) => {
+    scene.remove(m)
+    m.geometry.dispose()
+    m.material.dispose()
+  })
+  albumMeshes.length = 0
+
+  const spacing = 0.6
+  const startX = -((tracks.value.length - 1) * spacing) / 2
+  const baseY = 1.5
+
+  tracks.value.forEach((track, idx) => {
+    const tex = track.albumImage ? loader.load(track.albumImage) : null
+
     const geo = new THREE.PlaneGeometry(1, 1)
     const mat = new THREE.MeshStandardMaterial({
-      map: tex,
+      map: tex || null,
+      color: tex ? 0xffffff : 0x444444, // 이미지 없으면 회색
       side: THREE.DoubleSide,
       transparent: true,
       depthWrite: false,
@@ -128,15 +140,12 @@ function createAlbums() {
 
     const mesh = new THREE.Mesh(geo, mat)
 
-    const spacing = 0.6
-    const startX = -((albums.length - 1) * spacing) / 2
-    const baseY = 1.5
-
     mesh.position.set(startX + idx * spacing, baseY, 0)
 
     mesh.userData.originalPosition = mesh.position.clone()
     mesh.userData.baseY = baseY
     mesh.userData.index = idx
+    mesh.userData.track = track
 
     scene.add(mesh)
     albumMeshes.push(mesh)
@@ -147,7 +156,7 @@ function createLP() {
   scene.add(lpGroup)
 
   const texLoader = new THREE.TextureLoader()
-  const tex = texLoader.load('/textures/lp.png', () => {
+  const tex = texLoader.load('/src/assets/textures/lp.png', () => {
     console.log('LP 텍스처 로드 완료')
   })
 
@@ -157,6 +166,7 @@ function createLP() {
     metalness: 0.7,
     roughness: 0.45,
     transparent: true,
+    side: THREE.DoubleSide,
   })
 
   if (renderer) {
@@ -174,10 +184,10 @@ function createLP() {
 
   if (aspect > 1.5) {
     // 아주 와이드 모니터 → LP를 더 오른쪽으로 빼기
-    lpGroup.position.set(1.5, 1.5, 0.5)
+    lpGroup.position.set(0.6, 1.5, 0.5)
   } else {
     // 보통 비율 → 살짝 오른쪽/위
-    lpGroup.position.set(0.8, 1.5, 0.5)
+    lpGroup.position.set(0.2, 1.5, 0.5)
   }
 
   lpGroup.visible = false
@@ -188,20 +198,55 @@ function startVinylRotation() {
   lpGroup.visible = true
   console.log('lpGroup visible?', lpGroup.visible, lpGroup.position)
 
-  gsap.fromTo(lpGroup.position, { x: -1 }, { x: -0.1, duration: 1.5, ease: 'power3.out' })
+  const playerEl = playerContainerRef.value
+  showPlayerUI.value = true
 
-  if (lpSpinTween) {
-    lpSpinTween.kill()
-  }
+  gsap.fromTo(
+    lpGroup.position,
+    { x: -1.8 },
+    {
+      x: -1.2,
+      duration: 1,
+      ease: 'power3.out',
+
+      onComplete: () => {
+        startLPSpin() // LP 회전 시작
+        revealPlayerUI() // 플레이어 등장
+      },
+    },
+  )
+}
+
+function startLPSpin() {
+  if (lpSpinTween) lpSpinTween.kill()
 
   lpSpinTween = gsap.to(lpGroup.rotation, {
-    z: '-=6.283', // 2π
-    duration: 2.0,
+    z: '-=6.283',
+    duration: 2,
     repeat: -1,
     ease: 'none',
     modifiers: {
       z: gsap.utils.wrap(0, Math.PI * 2),
     },
+  })
+}
+
+function revealPlayerUI() {
+  showPlayerUI.value = true
+
+  nextTick(() => {
+    const el = playerContainerRef.value
+    if (!el) return
+
+    gsap.to(el, {
+      x: 0, // translateX(0)
+      opacity: 1, // 보이게
+      duration: 0.8,
+      ease: 'power3.out',
+      onStart() {
+        el.style.pointerEvents = 'auto' // 이제 클릭 가능
+      },
+    })
   })
 }
 
@@ -234,7 +279,7 @@ function onSelectAlbum(mesh) {
   tl.to(
     mesh.position,
     {
-      x: -0.5,
+      x: -1.2,
       y: 1.55,
       z: 2.0,
       duration: 0.8,
@@ -257,26 +302,6 @@ function onSelectAlbum(mesh) {
       ease: 'power3.out',
     },
     0.1,
-  )
-
-  // 4) 플레이어 UI 등장 + 음악 재생
-  const playerUI = playerUIRef.value
-  const audio = audioRef.value
-
-  tl.to(
-    playerUI,
-    {
-      opacity: 1,
-      transform: 'translateX(0)',
-      duration: 0.6,
-      onStart() {
-        // TODO: 선택된 앨범 텍스처를 LP 라벨에 입히고 싶으면 여기서 처리
-        if (audio) {
-          audio.play()
-        }
-      },
-    },
-    0.7,
   )
 }
 
@@ -430,17 +455,15 @@ function animate() {
 }
 
 // ====== 라이프사이클 ======
-onMounted(() => {
+onMounted(async () => {
   initThree()
-  createAlbums()
+
+  await loadTracks() // ✅ 트랙 먼저 로드
+  createAlbums() // ✅ 그 다음 3D 앨범 생성
   createLP()
 
+  console.log('tracks after load:', tracks.value)
   console.log('selectedPlace in AlbumScene:', props.selectedPlace)
-
-  if (props.selectedPlace?.image) {
-    console.log('try set background:', props.selectedPlace.image)
-    setSceneBackground(props.selectedPlace.image)
-  }
 
   animate()
 
@@ -462,16 +485,6 @@ onBeforeUnmount(() => {
     cancelAnimationFrame(animationId)
   }
 })
-
-watch(
-  () => props.selectedPlace?.image,
-  (newUrl) => {
-    if (newUrl) {
-      setSceneBackground(newUrl)
-    }
-  },
-  { immediate: false },
-)
 </script>
 
 <style scoped>
@@ -486,19 +499,16 @@ canvas#scene {
   display: block;
 }
 
-/* 간단한 플레이어 UI 스타일 예시 */
-.player-ui {
+.player-container {
   position: absolute;
-  right: 40px;
-  bottom: 40px;
-  width: 260px;
-  padding: 16px;
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.9);
-  color: #fff;
+  top: 50%;
+  right: 2%;
+  width: 600px;
+  height: 500px;
+  transform: translateY(-50%) translateX(200px); /* 오른쪽 밖으로 대기 */
   opacity: 0;
-  transform: translateX(20px);
-  pointer-events: auto;
+  pointer-events: none; /* 클릭 방지 (원하면) */
+  transition: none; /* CSS transition 제거 */
 }
 
 .back-btn {

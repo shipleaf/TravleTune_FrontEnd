@@ -50,7 +50,6 @@
       </ul>
     </div>
 
-    <!-- 실제 오디오 태그 (UI에서는 안 보임) -->
     <audio
       ref="audioRef"
       :src="currentTrack?.previewUrl"
@@ -66,7 +65,13 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useSpotifyStore } from '@/stores/spotify'
 import { storeToRefs } from 'pinia'
 
-const tracks = ref([])
+const props = defineProps({
+  tracks: {
+    type: Array,
+    default: () => [],
+  },
+})
+
 const currentIndex = ref(0)
 const isPlaying = ref(false)
 const audioRef = ref(null)
@@ -79,6 +84,7 @@ const spotifyDeviceId = ref(null)
 const store = useSpotifyStore()
 const { accessToken } = storeToRefs(store)
 
+const tracks = computed(() => props.tracks)
 const currentTrack = computed(() => tracks.value[currentIndex.value])
 
 async function playWithSpotify() {
@@ -133,7 +139,7 @@ async function pauseWithSpotify() {
 }
 
 async function loadSpotifySDKScript() {
-  if (window.Spotify) return // 이미 로드됨
+  if (window.Spotify) return
 
   await new Promise((resolve) => {
     const scriptTag = document.createElement('script')
@@ -144,91 +150,51 @@ async function loadSpotifySDKScript() {
 }
 
 async function initSpotifyPlayer() {
+  if (window.Spotify) {
+    return createPlayer()
+  }
+
   await loadSpotifySDKScript()
+  return waitForSpotifyObject()
+}
 
+function waitForSpotifyObject() {
   return new Promise((resolve) => {
-    window.onSpotifyWebPlaybackSDKReady = () => {
-      const player = new window.Spotify.Player({
-        name: 'My Web Player',
-        getOAuthToken: (cb) => {
-          cb(accessToken.value) // 🔥 유저 access_token
-        },
-        volume: 0.5,
-      })
-
-      player.addListener('ready', ({ device_id }) => {
-        console.log('Spotify Player Ready with device_id:', device_id)
-        spotifyPlayer.value = player
-        spotifyDeviceId.value = device_id
-        resolve()
-      })
-
-      player.addListener('initialization_error', ({ message }) =>
-        console.error('init error', message),
-      )
-      player.addListener('authentication_error', ({ message }) =>
-        console.error('auth error', message),
-      )
-      player.addListener('account_error', ({ message }) => console.error('account error', message))
-      player.addListener('playback_error', ({ message }) =>
-        console.error('playback error', message),
-      )
-
-      player.connect()
-    }
+    const interval = setInterval(() => {
+      if (window.Spotify) {
+        clearInterval(interval)
+        resolve(createPlayer())
+      }
+    }, 50)
   })
 }
 
-// 🔹 Spotify 추천/검색 API 호출
-async function loadTracks() {
-  const res = await fetch('http://localhost:3001/api/recommend')
-  const data = await res.json()
+function createPlayer() {
+  return new Promise((resolve) => {
+    const player = new window.Spotify.Player({
+      name: 'My Web Player',
+      getOAuthToken: (cb) => cb(accessToken.value),
+      volume: 0.5,
+    })
 
-  const pk = ref(1)
+    player.addListener('ready', ({ device_id }) => {
+      console.log('Player ready:', device_id)
+      spotifyPlayer.value = player
+      spotifyDeviceId.value = device_id
+      resolve()
+    })
 
-  tracks.value = data.tracks.items.map((t) => ({
-    pk: pk.value++,
-    id: t.id,
-    title: t.name,
-    artist: t.artists.map((a) => a.name).join(', '),
-    albumImage: t.album?.images?.[0]?.url || '',
-    previewUrl: t.preview_url ?? 'https://samplelib.com/lib/preview/mp3/sample-3s.mp3',
-    hasPreview: !!t.preview_url,
-    mood: 'search',
-    location: 'Spotify',
-    spotifyUri: t.uri, // 나중에 SDK 재생용으로 쓸 수 있게
-  }))
-
-  if (tracks.value.length > 0) {
-    currentIndex.value = 0
-  }
-
-  if (audioRef.value && currentTrack.value) {
-    audioRef.value.load()
-  }
+    player.connect()
+  })
 }
 
-// 🔹 (선택) 나중에 Web Playback SDK 붙일 거면 여기에서 initSpotifyPlayer() 호출
-// async function initSpotifyPlayer() { ... }
-
 onMounted(async () => {
-  // 1️⃣ 토큰 먼저 확보
-
-  if (!accessToken) {
-    // 토큰 없으면 로그인 페이지로 보냄 (백엔드 /login 라우트)
+  if (!accessToken.value) {
     window.location.href = 'http://localhost:3001/login'
     return
   }
 
-  // 2️⃣ (옵션) Web Playback SDK 초기화
   await initSpotifyPlayer()
-
-  // 3️⃣ 그 다음에 트랙 로딩
-  try {
-    await loadTracks()
-  } catch (err) {
-    console.error('Spotify fetch error:', err)
-  }
 })
 
 // 현재 곡 바뀌면 포인터/시간 초기화
@@ -238,8 +204,6 @@ watch(currentTrack, (newTrack) => {
     currentTime.value = 0
     seekValue.value = 0
     audioRef.value.load()
-    // 곡 바뀔 때 자동 재생하고 싶으면 여기서 호출:
-    // playAudio()
   }
 })
 
@@ -266,13 +230,13 @@ function togglePlay() {
 }
 
 function prevTrack() {
-  if (tracks.value.length === 0) return
+  if (!tracks.value.length) return
   currentIndex.value = (currentIndex.value - 1 + tracks.value.length) % tracks.value.length
   playAudio()
 }
 
 function nextTrack() {
-  if (tracks.value.length === 0) return
+  if (!tracks.value.length) return
   currentIndex.value = (currentIndex.value + 1) % tracks.value.length
   playAudio()
 }
@@ -294,7 +258,6 @@ function onLoadedMetadata() {
 }
 
 function onEnded() {
-  // 한 곡 끝나면 다음 곡 자동 재생
   nextTrack()
 }
 
@@ -319,12 +282,16 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .player-container {
-  width: 600px;
-  margin: 0 auto;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
   background: rgba(0, 0, 0, 0.9);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  z-index: 10;
 }
 
+/* 이하 스타일은 그대로 사용 */
 .current-track {
   display: flex;
   gap: 16px;
@@ -338,7 +305,6 @@ onBeforeUnmount(() => {
 }
 
 .albumAndPlayButton {
-  /* 사용 */
   position: relative;
 }
 
@@ -369,7 +335,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/*  */
 .playBar {
   display: flex;
   justify-content: space-between;
@@ -377,40 +342,13 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-.prevButton {
-  color: white;
-  background: none;
-  border: none;
-}
+.prevButton,
 .nextButton {
   color: white;
   background: none;
   border: none;
 }
 
-.track-info .tag {
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: #9ca3af;
-}
-
-.controls button {
-  border: none;
-  padding: 8px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  background: #f97316;
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.controls button:disabled {
-  background: #4b5563;
-  cursor: not-allowed;
-}
-
-/* 시크바 */
 .progress {
   display: flex;
   align-items: center;
@@ -424,23 +362,12 @@ onBeforeUnmount(() => {
   flex: 1;
 }
 
-/* 트랙 리스트 */
-//  <span class="number">1</span>
-//           <div class="text">
-//             <div class="title">{{ track.title }}</div>
-//             <div class="artist">{{ track.artist }}</div>
-//           </div>
 .number {
   color: #9ca3af;
   font-weight: 600;
 }
 .title {
   color: #f0f0f0;
-}
-
-.track-list h3 {
-  margin: 0 0 10px;
-  font-size: 1rem;
 }
 
 .track-list ul {
@@ -454,7 +381,6 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   padding: 8px 16px;
-  border-radius: 10px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -467,13 +393,6 @@ onBeforeUnmount(() => {
   background: rgba(249, 115, 22, 0.15);
 }
 
-.thumb {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
 .text .title {
   font-size: 0.95rem;
 }
@@ -481,10 +400,5 @@ onBeforeUnmount(() => {
 .text .artist {
   font-size: 0.8rem;
   color: #9ca3af;
-}
-
-.text .sub {
-  font-size: 0.75rem;
-  color: #6b7280;
 }
 </style>
