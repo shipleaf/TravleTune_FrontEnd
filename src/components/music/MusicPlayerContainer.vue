@@ -1,5 +1,7 @@
+<!-- 음악 플레이어 -->
+
 <template>
-  <div class="player-container">
+  <div class="player-inner-container">
     <!-- 현재 재생중인 곡 정보 -->
     <div class="current-track" v-if="currentTrack">
       <div class="albumAndPlayButton">
@@ -281,8 +283,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-.player-container {
-  position: absolute;
+.player-inner-container {
   width: 100%;
   height: 100%;
   overflow: auto;

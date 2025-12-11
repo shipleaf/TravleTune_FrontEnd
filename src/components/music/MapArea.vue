@@ -1,3 +1,5 @@
+<!--  -->
+
 <template>
   <!-- 선택된 장소 있을 때 -->
   <main v-if="selectedSpot" class="map-area">
@@ -17,29 +19,30 @@
         {{ selectedSpot.description }}
       </p>
     </div>
-
-    <div class="card-container">
-      <CoverFlow v-if="albumImages.length" :images="albumImages" />
-    </div>
-
-    <!-- 플레이어 (추천 트랙 props로 전달) -->
-    <div class="player-container">
-      <MusicPlayerContainer v-if="store.accessToken" :tracks="tracks" />
-    </div>
   </main>
 
   <!-- 선택된 장소 없을 때 -->
   <main v-else class="map-area">
     <div class="map-placeholder">
-      <MapContainer />
+      <MapContainer @click-spot="clickSpot" />
     </div>
   </main>
 </template>
 
 <script setup>
-import CoverFlow from './CoverFlow.vue'
 import MapContainer from './MapContainer.vue'
-import MusicPlayerContainer from './MusicPlayerContainer.vue'
+defineProps({
+  selectedSpot: {
+    type: Object,
+    default: null,
+  },
+})
+
+const emit = defineEmits(['click-spot'])
+
+const clickSpot = (spot) => {
+  emit('click-spot', spot)
+}
 </script>
 
 <style scoped>

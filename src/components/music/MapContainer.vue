@@ -1,10 +1,27 @@
+<!-- 카카오 맵과 마커가 선택되었을 때 관광지 정보와 album 선택을 제공 -->
+
 <template>
   <div id="container">
     <div id="mapContainer">
       <div id="map"></div>
-      <Transition name="sheet">
-        <AlbumScene v-if="selectedPlace" class="sheet-panel" :selected-place="selectedPlace" />
-      </Transition>
+      <AlbumScene
+        v-if="selectedPlace"
+        class="sheet-panel"
+        :selected-place="selectedPlace"
+        @loaded="clearOverlay"
+      />
+      <div v-show="isLoading" class="loading-overlay">
+        <div class="loader">
+          <div class="bar bar1"></div>
+          <div class="bar bar2"></div>
+          <div class="bar bar3"></div>
+          <div class="bar bar4"></div>
+          <div class="bar bar5"></div>
+          <div class="bar bar6"></div>
+          <div class="bar bar7"></div>
+          <div class="bar bar8"></div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -15,22 +32,24 @@ import AlbumScene from '@/components/music/AlbumScene.vue'
 
 const kakaoKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY
 
+const isLoading = ref(false)
+
+const emit = defineEmits(['click-spot'])
+
 // ✅ 우리가 가진 지역 데이터 (실제론 props로 받아도 됨)
 const attractions = [
   {
     attractions_id: 1,
-    title: '서울시청',
+    name: '서울시청',
+    description: '서울시청입니다',
     image: '/src/assets/img/seoulCityHall.webp',
     latitude: 37.5665,
     longitude: 126.978,
   },
 ]
 
-// ✅ 마커 클릭 시 선택된 장소
+// 선택 장소
 const selectedPlace = ref(null)
-// const closeOverlay = () => {
-//   selectedPlace.value = null
-// }
 
 const initMap = function () {
   const container = document.getElementById('map')
@@ -56,9 +75,15 @@ const initMap = function () {
     // 🔥 2) 마커 클릭 이벤트 → Vue 상태 변경
     // eslint-disable-next-line
     kakao.maps.event.addListener(marker, 'click', () => {
+      isLoading.value = true
       selectedPlace.value = attraction
+      emit('click-spot', selectedPlace.value)
     })
   })
+}
+
+const clearOverlay = () => {
+  isLoading.value = false
 }
 
 onMounted(() => {
@@ -137,5 +162,83 @@ onMounted(() => {
 .sheet-leave-from {
   transform: translateY(0%);
   opacity: 1;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0; /* top, right, bottom, left 모두 0 */
+  z-index: 20; /* 바텀시트(z-index:10)보다 위로 */
+  background: rgba(0, 0, 0, 0.35); /* ✅ 화면 어둡게 효과 */
+  backdrop-filter: blur(2px); /* 선택: 약간의 블러 효과 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease; /* 부드럽게 나타났다가 사라지게 */
+}
+
+.loader {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
+}
+
+.bar {
+  width: 10px;
+  height: 70px;
+  background: hsl(0, 100%, 50%);
+  display: inline-block;
+  transform-origin: bottom center;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 20px;
+  animation: loader8913 1.2s linear infinite;
+}
+
+.bar1 {
+  animation-delay: 0.1s;
+}
+
+.bar2 {
+  animation-delay: 0.2s;
+}
+
+.bar3 {
+  animation-delay: 0.3s;
+}
+
+.bar4 {
+  animation-delay: 0.4s;
+}
+
+.bar5 {
+  animation-delay: 0.5s;
+}
+
+.bar6 {
+  animation-delay: 0.6s;
+}
+
+.bar7 {
+  animation-delay: 0.7s;
+}
+
+.bar8 {
+  animation-delay: 0.8s;
+}
+
+@keyframes loader8913 {
+  0% {
+    transform: scaleY(0.1);
+  }
+
+  50% {
+    transform: scaleY(1);
+    background: yellowgreen;
+  }
+
+  100% {
+    transform: scaleY(0.1);
+    background: transparent;
+  }
 }
 </style>
