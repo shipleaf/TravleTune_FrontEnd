@@ -4,7 +4,7 @@
 
     <div class="app-main">
       <SideBar :selected-spot="selectedSpot" @select-spot="handleSelectSpot" />
-      <MapArea :selected-spot="selectedSpot" class="mapContainer" />
+      <MapArea :selected-spot="selectedSpot" class="mapContainer" @click-spot="handleSelectSpot" />
     </div>
   </div>
 </template>

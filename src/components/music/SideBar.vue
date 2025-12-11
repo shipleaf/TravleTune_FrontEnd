@@ -1,3 +1,5 @@
+<!-- 사이드바; 관광지가 선택되었을 때 emit -->
+
 <template>
   <aside class="sidebar">
     <div class="sidebar-inner">
@@ -14,7 +16,7 @@
         </div>
         <button type="button" class="sidebar-search-button">Search</button>
       </div>
-
+      
       <!-- 검색 결과 리스트 -->
       <div class="sidebar-list">
         <SpotCard

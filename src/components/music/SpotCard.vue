@@ -1,3 +1,5 @@
+<!-- 사이드바에 올라가는 관광지 컴포넌트 -->
+
 <template>
   <div class="spot-card" :class="{ 'spot-card--active': isActive }" @click="emit('click')">
     <div class="spot-card-image-wrapper">
