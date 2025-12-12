@@ -53,6 +53,7 @@ const clickSpot = (spot) => {
   position: relative;
   overflow: hidden;
   background: color-mix(in oklch, var(--background) 70%, black 10%);
+  z-index: 1;
 }
 
 .map-placeholder {

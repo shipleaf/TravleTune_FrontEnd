@@ -1,9 +1,9 @@
 <!-- 사이드바에 올라가는 관광지 컴포넌트 -->
 
 <template>
-  <div class="spot-card" :class="{ 'spot-card--active': isActive }" @click="emit('click')">
+  <div class="spot-card" :class="{ 'spot-card--active': isActive }">
     <div class="spot-card-image-wrapper">
-      <img class="spot-card-image" :src="image || '/placeholder.svg'" :alt="name" />
+      <img class="spot-card-image" :src="spot.image || '/placeholder.svg'" :alt="spot" />
       <div class="spot-card-image-gradient" />
       <div class="spot-card-badge">
         <span>♫</span>
@@ -15,11 +15,11 @@
           <Icon icon="ic:outline-location-on" width="20" color="white" />
         </div>
         <div class="spot-card-title">
-          {{ name }}
+          {{ spot.name }}
         </div>
       </div>
       <div class="spot-card-description">
-        {{ description }}
+        {{ spot.description }}
       </div>
     </div>
     <div v-if="isActive" class="spot-card-active-bar"></div>
@@ -27,16 +27,20 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useSpotStore } from '@/stores/spot'
 
-defineProps({
-  name: String,
-  description: String,
-  image: String,
-  isActive: Boolean,
+const props = defineProps({
+  spot: {
+    type: Object,
+    required: true,
+  },
 })
 
-const emit = defineEmits(['click'])
+const store = useSpotStore()
+
+const isActive = computed(() => store.selectedSpot && store.selectedSpot.id === props.spot.id)
 </script>
 
 <style scoped>
