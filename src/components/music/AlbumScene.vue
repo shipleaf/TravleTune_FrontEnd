@@ -2,6 +2,15 @@
   <div class="scene-wrapper" ref="wrapperRef">
     <!-- Three.js 캔버스 -->
     <canvas ref="canvasRef" id="scene"></canvas>
+
+    <div class="album-carousel-overlay">
+      <CoverFlow
+        v-if="!selectedTrack && tracks.length"
+        :tracks="tracks"
+        @select="handleTrackSelect"
+      />
+    </div>
+
     <div class="player-container" ref="playerContainerRef">
       <MusicPlayerContainer v-if="store.accessToken && showPlayerUI" :tracks="tracks" />
     </div>
@@ -10,14 +19,51 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref, nextTick } from 'vue'
+import CoverFlow from './CoverFlow.vue'
 import MusicPlayerContainer from './MusicPlayerContainer.vue'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { useSpotifyStore } from '@/stores/spotify'
 
+const emit = defineEmits(['loaded'])
+
 const store = useSpotifyStore()
 
 const tracks = ref([])
+
+const selectedTrack = ref(null)
+
+function handleTrackSelect(track) {
+  selectedTrack.value = track
+  spawnSelectedAlbumMesh(track)
+}
+
+function spawnSelectedAlbumMesh(track) {
+  const loader = new THREE.TextureLoader()
+  const tex = track.albumImage ? loader.load(track.albumImage) : null
+
+  if (tex) {
+    if ('colorSpace' in tex) {
+      tex.colorSpace = THREE.SRGBColorSpace
+    } else {
+      tex.encoding = THREE.sRGBEncoding
+    }
+  }
+
+  const geo = new THREE.PlaneGeometry(1, 1)
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex || null,
+    side: THREE.DoubleSide,
+    transparent: true,
+  })
+
+  const mesh = new THREE.Mesh(geo, mat)
+  mesh.position.set(0, 1, 0)
+
+  scene.add(mesh)
+
+  onSelectAlbum(mesh)
+}
 
 // 🔹 Spotify 추천/검색 API 호출을 여기로 이동
 async function loadTracks() {
@@ -39,6 +85,7 @@ async function loadTracks() {
       location: 'Spotify',
       spotifyUri: t.uri,
     }))
+    emit('loaded')
   } catch (err) {
     console.error('Spotify fetch error:', err)
   }
@@ -80,7 +127,7 @@ let lpSpinTween = null
 let animationId = null
 
 // 카메라 초기 위치 저장용
-let initialCameraPosition = null
+// let initialCameraPosition = null
 
 // ====== 초기화 함수들 ======
 function initThree() {
@@ -93,63 +140,30 @@ function initThree() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
   renderer.setSize(clientWidth, clientHeight)
 
+  if ('outputColorSpace' in renderer) {
+    // three r150+ 정도
+    renderer.outputColorSpace = THREE.SRGBColorSpace
+  } else {
+    // 구버전 (outputEncoding 쓰는 버전)
+    renderer.outputEncoding = THREE.sRGBEncoding
+  }
+
+  renderer.toneMapping = THREE.NoToneMapping
+
   scene = new THREE.Scene()
 
   camera = new THREE.PerspectiveCamera(50, clientWidth / clientHeight, 0.1, 100)
   camera.position.set(0, 1.6, 6)
   scene.add(camera)
 
-  initialCameraPosition = camera.position.clone()
+  // initialCameraPosition = camera.position.clone()
 
-  light = new THREE.DirectionalLight(0xffffff, 1.4)
+  light = new THREE.DirectionalLight(0xffffff, 3)
   light.position.set(2, 4, 5)
   scene.add(light)
 
   scene.background = null
   renderer.setClearColor(0x000000, 0)
-}
-
-function createAlbums() {
-  if (!tracks.value.length) return
-
-  const loader = new THREE.TextureLoader()
-  loader.setCrossOrigin('anonymous')
-
-  albumMeshes.forEach((m) => {
-    scene.remove(m)
-    m.geometry.dispose()
-    m.material.dispose()
-  })
-  albumMeshes.length = 0
-
-  const spacing = 0.6
-  const startX = -((tracks.value.length - 1) * spacing) / 2
-  const baseY = 1.5
-
-  tracks.value.forEach((track, idx) => {
-    const tex = track.albumImage ? loader.load(track.albumImage) : null
-
-    const geo = new THREE.PlaneGeometry(1, 1)
-    const mat = new THREE.MeshStandardMaterial({
-      map: tex || null,
-      color: tex ? 0xffffff : 0x444444, // 이미지 없으면 회색
-      side: THREE.DoubleSide,
-      transparent: true,
-      depthWrite: false,
-    })
-
-    const mesh = new THREE.Mesh(geo, mat)
-
-    mesh.position.set(startX + idx * spacing, baseY, 0)
-
-    mesh.userData.originalPosition = mesh.position.clone()
-    mesh.userData.baseY = baseY
-    mesh.userData.index = idx
-    mesh.userData.track = track
-
-    scene.add(mesh)
-    albumMeshes.push(mesh)
-  })
 }
 
 function createLP() {
@@ -198,7 +212,6 @@ function startVinylRotation() {
   lpGroup.visible = true
   console.log('lpGroup visible?', lpGroup.visible, lpGroup.position)
 
-  const playerEl = playerContainerRef.value
   showPlayerUI.value = true
 
   gsap.fromTo(
@@ -232,21 +245,34 @@ function startLPSpin() {
 }
 
 function revealPlayerUI() {
+  console.log('store.accessToken:', store.accessToken)
+  console.log('showPlayerUI:', showPlayerUI.value)
   showPlayerUI.value = true
 
   nextTick(() => {
     const el = playerContainerRef.value
     if (!el) return
 
-    gsap.to(el, {
-      x: 0, // translateX(0)
-      opacity: 1, // 보이게
-      duration: 0.8,
-      ease: 'power3.out',
-      onStart() {
-        el.style.pointerEvents = 'auto' // 이제 클릭 가능
+    gsap.fromTo(
+      el,
+      {
+        x: 200, // ✅ 오른쪽에서 시작
+        opacity: 0,
       },
-    })
+      {
+        x: 0, // ✅ 제자리까지 당겨오기
+        opacity: 1,
+        duration: 0.8,
+        ease: 'power3.out',
+        onStart() {
+          el.style.pointerEvents = 'auto'
+        },
+        onUpdate() {
+          // 현재 opacity 확인
+          console.log('current opacity:', el.style.opacity)
+        },
+      },
+    )
   })
 }
 
@@ -282,7 +308,7 @@ function onSelectAlbum(mesh) {
       x: -1.2,
       y: 1.55,
       z: 2.0,
-      duration: 0.8,
+      duration: 1,
       ease: 'power3.out',
       onComplete: () => {
         startVinylRotation()
@@ -381,22 +407,18 @@ function handleResize() {
 // ====== 되돌리기(Back 버튼) ======
 // function resetSelection() {
 //   if (!selectedMesh) return
-
 //   const audio = audioRef.value
 //   const playerUI = playerUIRef.value
-
 //   if (lpSpinTween) {
 //     lpSpinTween.kill()
 //     lpSpinTween = null
 //   }
-
 //   gsap.to(lpGroup.position, {
 //     x: -1,
 //     duration: 0.5,
 //     ease: 'power3.in',
 //     onComplete: () => {
 //       ;((lpGroup.visible = false), (lpGroup.rotation.z = 0))
-
 //       const originalPos = selectedMesh.userData.originalPosition
 //       if (originalPos) {
 //         gsap.to(selectedMesh.position, {
@@ -407,7 +429,6 @@ function handleResize() {
 //           ease: 'power3.inOut',
 //         })
 //       }
-
 //       // 앨범 opacity 복구
 //       gsap.to(
 //         albumMeshes.map((m) => m.material),
@@ -417,7 +438,6 @@ function handleResize() {
 //           stagger: 0.02,
 //         },
 //       )
-
 //       // 카메라 복구
 //       if (initialCameraPosition) {
 //         gsap.to(camera.position, {
@@ -428,7 +448,6 @@ function handleResize() {
 //           ease: 'power3.inOut',
 //         })
 //       }
-
 //       // UI 숨기고 음악 정지
 //       if (playerUI) {
 //         gsap.to(playerUI, {
@@ -441,7 +460,6 @@ function handleResize() {
 //         audio.pause()
 //         audio.currentTime = 0
 //       }
-
 //       selectedMesh = null
 //     },
 //   })
@@ -459,7 +477,6 @@ onMounted(async () => {
   initThree()
 
   await loadTracks() // ✅ 트랙 먼저 로드
-  createAlbums() // ✅ 그 다음 3D 앨범 생성
   createLP()
 
   console.log('tracks after load:', tracks.value)
@@ -493,6 +510,12 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
+.album-carousel-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
 canvas#scene {
   width: 100%;
   height: 100%;
@@ -505,7 +528,7 @@ canvas#scene {
   right: 2%;
   width: 600px;
   height: 500px;
-  transform: translateY(-50%) translateX(200px); /* 오른쪽 밖으로 대기 */
+  transform: translateY(-50%);
   opacity: 0;
   pointer-events: none; /* 클릭 방지 (원하면) */
   transition: none; /* CSS transition 제거 */

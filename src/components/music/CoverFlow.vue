@@ -1,8 +1,14 @@
 <template>
   <div class="boxes" ref="boxesRef">
-    <div class="box" v-for="(img, idx) in images" :key="idx" :style="{ '--src': `url(${img})` }">
-      <span>{{ idx + 1 }}</span>
-      <img :src="img" />
+    <div
+      class="box"
+      v-for="(track, index) in tracks"
+      :key="track.id"
+      :style="`--src: url(${track.albumImage})`"
+      @click="handleClick(track, index, $event)"
+    >
+      <span>{{ index + 1 }}</span>
+      <img :src="track.albumImage" />
     </div>
 
     <div class="controls">
@@ -43,13 +49,20 @@ import Draggable from 'https://cdn.skypack.dev/gsap@3.7.0/Draggable'
 gsap.registerPlugin(Draggable)
 
 const props = defineProps({
-  images: {
+  tracks: {
     type: Array,
     required: true,
   },
 })
 
 const emit = defineEmits(['select'])
+
+function handleClick(track) {
+  // 여기서 캐러셀 내부 클릭 이동 로직 + 최종 select 방출
+  // 클릭하면 가운데로 스냅시키고,
+  // 최종적으로 부모에 선택된 트랙 emit
+  emit('select', track)
+}
 
 const boxesRef = ref(null)
 const dragProxyRef = ref(null)

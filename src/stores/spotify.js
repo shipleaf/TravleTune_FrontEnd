@@ -1,8 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useSpotifyStore = defineStore('spotify', () => {
-  const accessToken = ref(null)
+export const useSpotifyStore = defineStore(
+  'spotify',
+  () => {
+    const accessToken = ref(null)
 
-  return { accessToken }
-})
+    return { accessToken }
+  },
+  {
+    persist: {
+      storage: localStorage,
+      paths: ['accessToken'],
+    },
+  },
+)
