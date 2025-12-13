@@ -7,7 +7,9 @@ export const useSpotStore = defineStore('spot', () => {
 
   // actions
   const setSelectedSpot = (newSpot) => {
+    console.log('설정할 스팟', newSpot)
     selectedSpot.value = newSpot
+    console.log('설정된 스팟', selectedSpot.value)
   }
 
   const deleteSelectedSpot = () => {

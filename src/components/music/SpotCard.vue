@@ -1,7 +1,7 @@
 <!-- 사이드바에 올라가는 관광지 컴포넌트 -->
 
 <template>
-  <div class="spot-card" :class="{ 'spot-card--active': isActive }">
+  <div @click="handleSelectSpot" class="spot-card" :class="{ 'spot-card--active': isActive }">
     <div class="spot-card-image-wrapper">
       <img class="spot-card-image" :src="spot.image || '/placeholder.svg'" :alt="spot" />
       <div class="spot-card-image-gradient" />
@@ -15,7 +15,7 @@
           <Icon icon="ic:outline-location-on" width="20" color="white" />
         </div>
         <div class="spot-card-title">
-          {{ spot.name }}
+          {{ spot.title }}
         </div>
       </div>
       <div class="spot-card-description">
@@ -30,6 +30,7 @@
 import { computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useSpotStore } from '@/stores/spot'
+import { storeToRefs } from 'pinia'
 
 const props = defineProps({
   spot: {
@@ -39,8 +40,11 @@ const props = defineProps({
 })
 
 const store = useSpotStore()
+const { selectedSpot } = storeToRefs(store)
 
-const isActive = computed(() => store.selectedSpot && store.selectedSpot.id === props.spot.id)
+const isActive = computed(
+  () => selectedSpot.value && selectedSpot.value.attraction_id === props.spot.attraction_id,
+)
 </script>
 
 <style scoped>
