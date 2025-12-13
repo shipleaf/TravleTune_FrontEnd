@@ -18,4 +18,3 @@ export const signup = (payload) => {
     data: payload,
   })
 }
-

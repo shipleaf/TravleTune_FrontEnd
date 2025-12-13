@@ -4,12 +4,6 @@
   <div id="container">
     <div id="mapContainer">
       <div id="map"></div>
-      <AlbumScene
-        v-if="selectedPlace"
-        class="sheet-panel"
-        :selected-place="selectedPlace"
-        @loaded="clearOverlay"
-      />
       <div v-show="isLoading" class="loading-overlay">
         <div class="loader">
           <div class="bar bar1"></div>
@@ -28,13 +22,16 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import AlbumScene from '@/components/music/AlbumScene.vue'
+import { useSpotStore } from '@/stores/spot'
+
+const store = useSpotStore()
+
+const { selectedSpot } = store
+const { setSelectedSpot } = store
 
 const kakaoKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY
 
 const isLoading = ref(false)
-
-const emit = defineEmits(['click-spot'])
 
 // ✅ 우리가 가진 지역 데이터 (실제론 props로 받아도 됨)
 const attractions = [
@@ -47,9 +44,6 @@ const attractions = [
     longitude: 126.978,
   },
 ]
-
-// 선택 장소
-const selectedPlace = ref(null)
 
 const initMap = function () {
   const container = document.getElementById('map')
@@ -75,15 +69,14 @@ const initMap = function () {
     // 🔥 2) 마커 클릭 이벤트 → Vue 상태 변경
     // eslint-disable-next-line
     kakao.maps.event.addListener(marker, 'click', () => {
-      isLoading.value = true
-      selectedPlace.value = attraction
-      emit('click-spot', selectedPlace.value)
+      if (!selectedSpot) {
+        isLoading.value = true
+        setSelectedSpot(attraction)
+      } else {
+        alert('이미 선택된 관광지가 존재합니다.')
+      }
     })
   })
-}
-
-const clearOverlay = () => {
-  isLoading.value = false
 }
 
 onMounted(() => {

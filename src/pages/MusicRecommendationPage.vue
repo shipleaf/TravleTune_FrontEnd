@@ -3,23 +3,16 @@
     <HeaderBar />
 
     <div class="app-main">
-      <SideBar :selected-spot="selectedSpot" @select-spot="handleSelectSpot" />
-      <MapArea :selected-spot="selectedSpot" class="mapContainer" @click-spot="handleSelectSpot" />
+      <SideBar />
+      <MapArea class="mapContainer" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import HeaderBar from '@/components/common/HeaderBar.vue'
 import SideBar from '@/components/music/SideBar.vue'
 import MapArea from '@/components/music/MapArea.vue'
-
-const selectedSpot = ref(null)
-
-function handleSelectSpot(spot) {
-  selectedSpot.value = spot
-}
 </script>
 
 <style scoped>

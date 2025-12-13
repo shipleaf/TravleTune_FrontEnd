@@ -218,8 +218,8 @@ function startVinylRotation() {
     lpGroup.position,
     { x: -1.8 },
     {
-      x: -1.2,
-      duration: 1,
+      x: -1,
+      duration: 0.8,
       ease: 'power3.out',
 
       onComplete: () => {
@@ -305,7 +305,7 @@ function onSelectAlbum(mesh) {
   tl.to(
     mesh.position,
     {
-      x: -1.2,
+      x: -1,
       y: 1.55,
       z: 2.0,
       duration: 1,
@@ -508,14 +508,16 @@ onBeforeUnmount(() => {
 .scene-wrapper {
   position: relative;
   width: 100%;
+  height: 100%;
 }
 
 .album-carousel-overlay {
+  height: 100%;
+  width: 100%;
   position: absolute;
   inset: 0;
   pointer-events: auto;
 }
-
 canvas#scene {
   width: 100%;
   height: 100%;
@@ -525,7 +527,7 @@ canvas#scene {
 .player-container {
   position: absolute;
   top: 50%;
-  right: 2%;
+  right: 5%;
   width: 600px;
   height: 500px;
   transform: translateY(-50%);

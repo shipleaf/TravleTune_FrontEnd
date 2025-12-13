@@ -1,5 +1,3 @@
-<!--  -->
-
 <template>
   <!-- 선택된 장소 있을 때 -->
   <main v-if="selectedSpot" class="map-area">
@@ -13,39 +11,40 @@
     <!-- 상단 정보 영역 -->
     <div class="map-spot-top-panel">
       <h1 class="map-spot-title">
-        {{ selectedSpot.name }}
+        {{ selectedSpot.title }}
       </h1>
       <p class="map-spot-description">
         {{ selectedSpot.description }}
       </p>
+    </div>
+    <div class="album-container">
+      <AlbumScene v-if="selectedSpot" class="sheet-panel" @loaded="clearOverlay" />
     </div>
   </main>
 
   <!-- 선택된 장소 없을 때 -->
   <main v-else class="map-area">
     <div class="map-placeholder">
-      <MapContainer @click-spot="clickSpot" />
+      <MapContainer />
     </div>
   </main>
 </template>
 
 <script setup>
+import { storeToRefs } from 'pinia'
 import MapContainer from './MapContainer.vue'
-defineProps({
-  selectedSpot: {
-    type: Object,
-    default: null,
-  },
-})
+import AlbumScene from './AlbumScene.vue'
+import { useSpotStore } from '@/stores/spot'
 
-const emit = defineEmits(['click-spot'])
-
-const clickSpot = (spot) => {
-  emit('click-spot', spot)
-}
+const store = useSpotStore()
+const { selectedSpot } = storeToRefs(store)
 </script>
 
 <style scoped>
+.album-container {
+  width: 100%;
+  height: 100%;
+}
 /* MapArea.vue */
 .map-area {
   width: 100%;

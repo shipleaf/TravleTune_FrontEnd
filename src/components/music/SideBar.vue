@@ -22,8 +22,8 @@
       <!-- 검색 결과 리스트 -->
       <div class="sidebar-list">
         <SpotCard
-          v-for="spot in filteredSpots"
-          :key="spot.id"
+          v-for="spot in mockSpots"
+          :key="spot.attraction_id"
           :spot="spot"
           @click="handleSelectSpot(spot)"
         />
@@ -39,17 +39,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import SpotCard from './SpotCard.vue'
 import SiGunguSelectForm from './SiGunguSelectForm.vue'
 import { useSpotStore } from '@/stores/spot'
 
 const store = useSpotStore()
-const { setSelectedSpot } = store
 
-defineProps({
-  selectedSpot: Object,
-})
+const { setSelectedSpot } = store
 
 const keyword = ref('')
 
@@ -81,46 +78,48 @@ onBeforeUnmount(() => {
 
 const mockSpots = ref([
   {
-    id: 1,
-    name: 'Santorini, Greece',
-    description: 'Stunning sunsets and Mediterranean vibes',
+    attraction_id: 1,
+    title: 'Santorini, Greece',
     image: '/src/assets/img/santorini.jfif',
+    description: 'Stunning sunsets and Mediterranean vibes',
+    latitude: 37.123,
+    longitude: 128.123,
   },
   {
-    id: 2,
-    name: 'Tokyo, Japan',
-    description: 'Electric energy meets traditional culture',
+    attraction_id: 2,
+    title: 'Tokyo, Japan',
     image: '/src/assets/img/Tokyo.avif',
+    description: 'Electric energy meets traditional culture',
+    latitude: 37.123,
+    longitude: 128.123,
   },
   {
-    id: 3,
-    name: 'Reykjavik, Iceland',
-    description: 'Northern lights and ethereal landscapes',
+    attraction_id: 3,
+    title: 'Reykjavik, Iceland',
     image: '/src/assets/img/Reykjavik.jpg',
+    description: 'Northern lights and ethereal landscapes',
+    latitude: 37.123,
+    longitude: 128.123,
   },
   {
-    id: 4,
-    name: 'Bali, Indonesia',
-    description: 'Tropical paradise with serene beaches',
+    attraction_id: 4,
+    title: 'Bali, Indonesia',
     image: '/src/assets/img/Bali.jpg',
+    description: 'Tropical paradise with serene beaches',
+    latitude: 37.123,
+    longitude: 128.123,
   },
   {
-    id: 5,
-    name: 'Paris, France',
-    description: 'Romantic streets and timeless elegance',
+    attraction_id: 5,
+    title: 'Paris, France',
     image: '/src/assets/img/Paris.jpg',
+    description: 'Romantic streets and timeless elegance',
+    latitude: 37.123,
+    longitude: 128.123,
   },
 ])
 
-const filteredSpots = computed(() => {
-  const q = keyword.value.trim().toLowerCase()
-  if (!q) return mockSpots.value
-  return mockSpots.value.filter(
-    (s) => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q),
-  )
-})
-
-function handleSelectSpot(spot) {
+const handleSelectSpot = (spot) => {
   setSelectedSpot(spot)
 }
 </script>
