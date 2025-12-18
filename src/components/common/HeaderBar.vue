@@ -34,6 +34,7 @@ const handleMain = () => {
 /* Header */
 
 .app-header {
+  width: 100%;
   height: 64px;
   border-bottom: 1px solid var(--border);
   background: color-mix(in oklch, var(--card) 70%, transparent);

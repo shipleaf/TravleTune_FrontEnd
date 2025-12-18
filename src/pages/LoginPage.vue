@@ -3,7 +3,7 @@
     <!--왼쪽-->
     <aside class="left">
       <div class="left-inner">
-        <div class="brand">
+        <div class="brand" @click="navigateToHome">
           <div class="lp-container">
             <LpSpinner />
           </div>
@@ -174,6 +174,10 @@ function setView(view) {
   showPassword.value = false
 }
 
+const navigateToHome = () => {
+  router.push('/')
+}
+
 const navigateToSignUp = () => {
   router.push('/signup')
 }
@@ -257,6 +261,7 @@ $bg: #ffffff;
     display: flex;
     align-items: center;
     gap: 12px;
+    cursor: pointer;
 
     .brand-name {
       color: #fff;

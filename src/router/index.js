@@ -8,6 +8,7 @@ import MusicRecommendationPage from '../pages/MusicRecommendationPage.vue'
 import MyPage from '../pages/MyPage.vue'
 import SpotifySuccess from '@/pages/SpotifySuccess.vue'
 import SignupSuccess from '@/pages/SignupSuccess.vue'
+import PlanDetailPage from '@/pages/PlanDetailPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,6 +44,11 @@ const router = createRouter({
       path: '/travel-plan',
       name: 'travel-plan',
       component: TravelPlanPage,
+    },
+    {
+      path: '/plan-detail',
+      name: 'plan-detail',
+      component: PlanDetailPage,
     },
     {
       path: '/music',

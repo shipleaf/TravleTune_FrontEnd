@@ -17,6 +17,7 @@
     "@iconify/vue": "^5.0.0",
     "axios": "^1.13.2",
     "gsap": "^3.12.5",
+    "lucide-vue-next": "^0.561.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "three": "^0.164.0",
