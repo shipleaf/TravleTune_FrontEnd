@@ -44,13 +44,43 @@
       </header>
 
       <section class="modal-container-body rtf">
-        <VDatePicker v-model.range="range" borderless expanded :rows="2" class="my-calendar" />
+        <Transition name="slide-left" mode="out-in">
+          <div class="step-wrapper" :key="createModalStep">
+            <VDatePicker
+              v-if="createModalStep === 1"
+              v-model.range="range"
+              borderless
+              expanded
+              :rows="2"
+              class="my-calendar"
+            />
+            <PlanModalStepOne v-else-if="createModalStep === 2" />
+            <PlanModalStepTwo v-else-if="createModalStep === 3" />
+          </div>
+        </Transition>
       </section>
 
       <footer class="modal-container-footer">
-        <button class="button is-ghost" type="button" @click="$emit('decline')">Decline</button>
-        <button class="button is-primary" type="button" @click="$emit('accept')">
-          Accept
+        <button class="button is-ghost" type="button" @click="prevStep">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-move-left-icon lucide-move-left"
+          >
+            <path d="M6 8L2 12L6 16" />
+            <path d="M2 12H22" />
+          </svg>
+          이전
+        </button>
+        <button class="button is-primary" type="button" @click="nextStep">
+          다음
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -74,6 +104,8 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import PlanModalStepOne from './PlanModalStepOne.vue'
+import PlanModalStepTwo from './PlanModalStepTwo.vue'
 
 const range = ref({
   start: '',
@@ -92,11 +124,22 @@ defineProps({
   modelValue: { type: Boolean, default: true },
 })
 
+const createModalStep = ref(1)
+
 const emit = defineEmits(['update:modelValue', 'accept', 'decline', 'close'])
+
+const prevStep = () => {
+  createModalStep.value -= 1
+}
+
+const nextStep = () => {
+  createModalStep.value += 1
+}
 
 const close = () => {
   emit('update:modelValue', false)
   emit('close')
+  createModalStep.value = 1
 }
 </script>
 
@@ -272,5 +315,33 @@ const close = () => {
   &:focus {
     background-color: #dfdad7;
   }
+}
+.step-wrapper {
+  width: 100%;
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(40px);
+}
+
+.slide-left-enter-to {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-left-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-40px);
 }
 </style>

@@ -60,9 +60,9 @@ const mockTrips = [
     endDate: '2024-06-25',
     image: '/src/assets/img/santorini-sunset.png',
     participants: [
-      { id: '1', name: 'Sarah Chen', avatar: '/src/assets/img/IMG＿5083.jpg' },
-      { id: '2', name: 'Mike Johnson', avatar: '/src/assets/img/IMG＿5083.jpg' },
-      { id: '3', name: 'Emma Davis', avatar: '/src/assets/img/IMG＿5083.jpg' },
+      { id: '1', name: 'Sarah Chen', avatar: '/src/assets/img/shipleaf.jpg' },
+      { id: '2', name: 'Mike Johnson', avatar: '/src/assets/img/shipleaf.jpg' },
+      { id: '3', name: 'Emma Davis', avatar: '/src/assets/img/shipleaf.jpg' },
     ],
   },
   {
@@ -73,8 +73,8 @@ const mockTrips = [
     endDate: '2025-03-20',
     image: '/src/assets/img/tokyo-japan-neon-night.jpg',
     participants: [
-      { id: '1', name: 'David Park', avatar: '/src/assets/img/IMG＿5083.jpg' },
-      { id: '2', name: 'Lisa Wong', avatar: '/src/assets/img/IMG＿5083.jpg' },
+      { id: '1', name: 'David Park', avatar: '/src/assets/img/shipleaf.jpg' },
+      { id: '2', name: 'Lisa Wong', avatar: '/src/assets/img/shipleaf.jpg' },
     ],
   },
   {
@@ -85,10 +85,10 @@ const mockTrips = [
     endDate: '2025-02-07',
     image: '/src/assets/img/reykjavik-iceland-northern-lights.jpg',
     participants: [
-      { id: '1', name: 'Alex Smith', avatar: '/src/assets/img/IMG＿5083.jpg' },
-      { id: '2', name: 'Jordan Lee', avatar: '/src/assets/img/IMG＿5083.jpg' },
-      { id: '3', name: 'Casey Morgan', avatar: '/src/assets/img/IMG＿5083.jpg' },
-      { id: '4', name: 'Riley Taylor', avatar: '/src/assets/img/IMG＿5083.jpg' },
+      { id: '1', name: 'Alex Smith', avatar: '/src/assets/img/shipleaf.jpg' },
+      { id: '2', name: 'Jordan Lee', avatar: '/src/assets/img/shipleaf.jpg' },
+      { id: '3', name: 'Casey Morgan', avatar: '/src/assets/img/shipleaf.jpg' },
+      { id: '4', name: 'Riley Taylor', avatar: '/src/assets/img/shipleaf.jpg' },
     ],
   },
   {
@@ -98,7 +98,7 @@ const mockTrips = [
     startDate: '2024-08-05',
     endDate: '2024-08-15',
     image: '/src/assets/img/bali-beach.png',
-    participants: [{ id: '1', name: 'Chris Anderson', avatar: '/src/assets/img/IMG＿5083.jpg' }],
+    participants: [{ id: '1', name: 'Chris Anderson', avatar: '/src/assets/img/shipleaf.jpg' }],
   },
 ]
 
