@@ -21,7 +21,7 @@
           <Plus class="btn-purple__icon" />
           새로운 여행
         </button>
-        <NewPlanModal v-model="open" @accept="onAccept" @decline="onDecline" />
+        <NewPlanModal v-if="open" v-model="open" @accept="onAccept" @decline="onDecline" />
       </div>
 
       <p v-if="upcomingTrips.length === 0" class="muted">
@@ -29,7 +29,12 @@
       </p>
 
       <div v-else class="trip-grid">
-        <TripCard v-for="trip in upcomingTrips" :key="trip.id" :trip="trip" />
+        <TripCard
+          v-for="trip in upcomingTrips"
+          :key="trip.trip_id"
+          :trip="trip"
+          @click="movePlanDetail(trip.trip_id)"
+        />
       </div>
     </section>
 
@@ -39,80 +44,63 @@
       <p v-if="pastTrips.length === 0" class="muted">No past trips yet.</p>
 
       <div v-else class="trip-grid">
-        <TripCard v-for="trip in pastTrips" :key="trip.id" :trip="trip" :isPast="true" />
+        <TripCard
+          v-for="trip in pastTrips"
+          :key="trip.trip_id"
+          :trip="trip"
+          :isPast="true"
+          @click="movePlanDetail(trip.trip_id)"
+        />
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TripCard from './TripCard.vue'
 import { Plus } from 'lucide-vue-next'
 import NewPlanModal from './NewPlanModal.vue'
+import { getTripImageMock, getTripsMock } from '@/api/tripApi'
+import { useRouter } from 'vue-router'
 
-const mockTrips = [
-  {
-    id: '1',
-    title: 'Summer Adventure in Greece',
-    destination: 'Santorini, Greece',
-    startDate: '2024-06-15',
-    endDate: '2024-06-25',
-    image: '/src/assets/img/santorini-sunset.png',
-    participants: [
-      { id: '1', name: 'Sarah Chen', avatar: '/src/assets/img/shipleaf.jpg' },
-      { id: '2', name: 'Mike Johnson', avatar: '/src/assets/img/shipleaf.jpg' },
-      { id: '3', name: 'Emma Davis', avatar: '/src/assets/img/shipleaf.jpg' },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Tokyo Food Tour',
-    destination: 'Tokyo, Japan',
-    startDate: '2025-03-10',
-    endDate: '2025-03-20',
-    image: '/src/assets/img/tokyo-japan-neon-night.jpg',
-    participants: [
-      { id: '1', name: 'David Park', avatar: '/src/assets/img/shipleaf.jpg' },
-      { id: '2', name: 'Lisa Wong', avatar: '/src/assets/img/shipleaf.jpg' },
-    ],
-  },
-  {
-    id: '3',
-    title: 'Northern Lights Experience',
-    destination: 'Reykjavik, Iceland',
-    startDate: '2025-02-01',
-    endDate: '2025-02-07',
-    image: '/src/assets/img/reykjavik-iceland-northern-lights.jpg',
-    participants: [
-      { id: '1', name: 'Alex Smith', avatar: '/src/assets/img/shipleaf.jpg' },
-      { id: '2', name: 'Jordan Lee', avatar: '/src/assets/img/shipleaf.jpg' },
-      { id: '3', name: 'Casey Morgan', avatar: '/src/assets/img/shipleaf.jpg' },
-      { id: '4', name: 'Riley Taylor', avatar: '/src/assets/img/shipleaf.jpg' },
-    ],
-  },
-  {
-    id: '4',
-    title: 'Beach Getaway',
-    destination: 'Bali, Indonesia',
-    startDate: '2024-08-05',
-    endDate: '2024-08-15',
-    image: '/src/assets/img/bali-beach.png',
-    participants: [{ id: '1', name: 'Chris Anderson', avatar: '/src/assets/img/shipleaf.jpg' }],
-  },
-]
+const router = useRouter()
 
-const trips = ref(mockTrips)
-
-const today = new Date()
-
-const pastTrips = computed(() => trips.value.filter((trip) => new Date(trip.endDate) < today))
-
-const upcomingTrips = computed(() =>
-  trips.value.filter((trip) => new Date(trip.startDate) >= today),
-)
-
+const trips = ref([])
 const open = ref(false)
+
+const movePlanDetail = (tripId) => {
+  router.push({
+    name: 'plan-detail',
+    params: { plan_id: tripId },
+  })
+}
+
+// TODO: 이미지 렌더링 최적화
+const todayTs = new Date().setHours(0, 0, 0, 0)
+
+const pastTrips = computed(() => trips.value.filter((t) => t._endTs < todayTs))
+const upcomingTrips = computed(() => trips.value.filter((t) => t._startTs >= todayTs))
+
+onMounted(async () => {
+  const res = await getTripsMock()
+
+  const base = res.data.map((t) => ({
+    ...t,
+    _startTs: Date.parse(t.start_date),
+    _endTs: Date.parse(t.end_date),
+  }))
+
+  // 이미지까지 붙인 후 한 번에 할당(아래 2번)
+  const withImages = await Promise.all(
+    base.map(async (trip) => {
+      const imageRes = await getTripImageMock(trip.trip_id)
+      return { ...trip, image: imageRes.data.image_url }
+    }),
+  )
+
+  trips.value = withImages
+})
 </script>
 
 <style lang="scss" scoped>

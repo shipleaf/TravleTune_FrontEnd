@@ -1,11 +1,7 @@
 <template>
   <div :class="['trip-card', isPast ? 'is-past' : '']">
     <div class="trip-image">
-      <img
-        :src="trip.image || '/placeholder.svg'"
-        :alt="trip.destination"
-        class="trip-image__img"
-      />
+      <img :src="tripImage" :alt="destinationText" class="trip-image__img" />
       <div class="trip-image__gradient" />
     </div>
 
@@ -15,32 +11,36 @@
 
       <div class="trip-row">
         <MapPin class="trip-icon trip-icon--accent" />
-        <span>{{ trip.destination }}</span>
+        <span>{{ destinationText }}</span>
       </div>
 
       <div class="trip-row">
         <Calendar class="trip-icon trip-icon--primary" />
-        <span>{{ formatDate(trip.startDate) }} - {{ formatDate(trip.endDate) }}</span>
+        <span>{{ formatDate(trip.start_date) }} - {{ formatDate(trip.end_date) }}</span>
       </div>
 
       <!-- Participants -->
       <div class="participants">
         <div class="participants__stack">
           <div
-            v-for="p in visibleParticipants"
-            :key="p.id"
+            v-for="m in visibleMembers"
+            :key="m.member_id"
             class="participants__item"
-            @mouseenter="hoveredParticipant = p.id"
-            @mouseleave="hoveredParticipant = null"
+            @mouseenter="hoveredMemberId = m.member_id"
+            @mouseleave="hoveredMemberId = null"
           >
-            <img :src="p.avatar || '/placeholder.svg'" :alt="p.name" class="participants__avatar" />
-            <div v-if="hoveredParticipant === p.id" class="participants__tooltip">
-              {{ p.name }}
+            <img
+              :src="m.profile_image || '/placeholder.svg'"
+              :alt="m.nickname"
+              class="participants__avatar"
+            />
+            <div v-if="hoveredMemberId === m.member_id" class="participants__tooltip">
+              {{ m.nickname }}
             </div>
           </div>
 
-          <div v-if="hasMoreParticipants" class="participants__more">
-            +{{ trip.participants.length - maxVisibleParticipants }}
+          <div v-if="hasMoreMembers" class="participants__more">
+            +{{ (trip.trip_members?.length || 0) - maxVisibleMembers }}
           </div>
         </div>
       </div>
@@ -49,10 +49,7 @@
 </template>
 
 <script setup>
-// Vue
 import { ref, computed } from 'vue'
-
-// lucide-vue-next (설치 필요: npm i lucide-vue-next)
 import { Calendar, MapPin } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -66,23 +63,30 @@ const props = defineProps({
   },
 })
 
-const hoveredParticipant = ref(null)
+const hoveredMemberId = ref(null)
+
+const destinationText = computed(() => {
+  const s = props.trip?.sido_name ?? ''
+  const g = props.trip?.gungu_name ?? ''
+  return [s, g].filter(Boolean).join(' ')
+})
+
+const tripImage = computed(() => props.trip?.image || '/placeholder.svg')
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('KR', {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',
   })
 }
 
-const maxVisibleParticipants = 3
+const maxVisibleMembers = 3
 
-const hasMoreParticipants = computed(() => props.trip.participants?.length > maxVisibleParticipants)
+const hasMoreMembers = computed(() => (props.trip.trip_members?.length || 0) > maxVisibleMembers)
 
-const visibleParticipants = computed(() =>
-  (props.trip.participants || []).slice(0, maxVisibleParticipants),
-)
+const visibleMembers = computed(() => (props.trip.trip_members || []).slice(0, maxVisibleMembers))
 </script>
 
 <style lang="scss" scoped>

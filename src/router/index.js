@@ -46,7 +46,7 @@ const router = createRouter({
       component: TravelPlanPage,
     },
     {
-      path: '/plan-detail',
+      path: '/plan-detail/:plan_id(\\d+)',
       name: 'plan-detail',
       component: PlanDetailPage,
     },

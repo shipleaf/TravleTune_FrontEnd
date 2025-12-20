@@ -18,47 +18,9 @@
 <script setup>
 import HeaderBar from '@/components/common/HeaderBar.vue'
 import TripDetailSidebar from '@/components/plan/TripDetailSidebar.vue'
-import { computed, onMounted, ref } from 'vue'
-import { useSpotStore } from '@/stores/spot'
-
-const store = useSpotStore()
-const { selectedSpot } = store
-const { setSelectedSpot } = store
+import { onMounted } from 'vue'
 
 const kakaoKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY
-const isLoading = ref(false)
-
-const keyword = ref('')
-
-// ✅ 우리가 가진 지역 데이터 (실제론 props로 받아도 됨)
-const attractions = ref([
-  {
-    attractions_id: 1,
-    name: '서울시청',
-    description: '서울시청입니다',
-    image: '/src/assets/img/seoulCityHall.webp',
-    latitude: 37.5665,
-    longitude: 126.978,
-  },
-])
-
-const filteredAttractions = computed(() => {
-  const k = keyword.value.trim().toLowerCase()
-  if (!k) return attractions.value
-  return attractions.value.filter((a) => {
-    return a.name.toLowerCase().includes(k) || a.description.toLowerCase().includes(k)
-  })
-})
-
-const handlePick = (attraction) => {
-  if (!selectedSpot) {
-    isLoading.value = true
-    setSelectedSpot(attraction)
-  } else {
-    alert('이미 선택된 관광지가 존재합니다.')
-  }
-}
-
 const initMap = function () {
   const container = document.getElementById('map')
   const options = {
@@ -68,23 +30,6 @@ const initMap = function () {
   }
   // eslint-disable-next-line
   const map = new kakao.maps.Map(container, options)
-
-  // 🔥 1) 우리가 가진 데이터로 마커 생성
-  attractions.value.forEach((attraction) => {
-    // eslint-disable-next-line
-    const markerPos = new kakao.maps.LatLng(attraction.latitude, attraction.longitude)
-    // eslint-disable-next-line
-    const marker = new kakao.maps.Marker({
-      position: markerPos,
-      map,
-    })
-
-    // 🔥 2) 마커 클릭 이벤트 → Vue 상태 변경
-    // eslint-disable-next-line
-    kakao.maps.event.addListener(marker, 'click', () => {
-      handlePick(attraction)
-    })
-  })
 }
 
 onMounted(() => {
@@ -291,7 +236,6 @@ onMounted(() => {
   font-size: 12px;
   line-height: 1.35;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
