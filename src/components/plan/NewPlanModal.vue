@@ -61,7 +61,7 @@
       </section>
 
       <footer class="modal-container-footer">
-        <button class="button is-ghost" type="button" @click="prevStep">
+        <button v-if="createModalStep > 1" class="button is-ghost" type="button" @click="prevStep">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -79,8 +79,29 @@
           </svg>
           이전
         </button>
-        <button class="button is-primary" type="button" @click="nextStep">
-          다음
+        <button
+          class="button is-primary"
+          type="button"
+          :disabled="!canGoNext"
+          @click="createModalStep === 3 ? createTrip() : nextStep()"
+        >
+          {{ createModalStep === 3 ? '여행 생성' : '다음' }}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-plus-icon lucide-plus"
+            v-if="createModalStep === 3"
+          >
+            <path d="M5 12h14" />
+            <path d="M12 5v14" />
+          </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -92,6 +113,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             class="lucide lucide-move-right-icon lucide-move-right"
+            v-else
           >
             <path d="M18 8L22 12L18 16" />
             <path d="M2 12H22" />
@@ -103,22 +125,52 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import PlanModalStepOne from './PlanModalStepOne.vue'
 import PlanModalStepTwo from './PlanModalStepTwo.vue'
+import { useTripStore } from '@/stores/trip'
+import { storeToRefs } from 'pinia'
+
+const store = useTripStore()
+
+const { selectedSido, selectedGungu, tripTitle, tripDescription, invitedUsers } = storeToRefs(store)
 
 const range = ref({
   start: '',
   end: '',
 })
 
+/**
+ * ✅ start만 선택된 경우(end가 비었으면) end를 start로 자동 세팅
+ * (VDatePicker가 Date 객체를 줄 수도 있어서 그대로 복사)
+ */
 watch(
-  range,
-  (newVal) => {
-    console.log('range 변경됨:', newVal.start, newVal.end)
+  () => range.value.start,
+  (s) => {
+    if (s && !range.value.end) {
+      range.value.end = s
+    }
   },
-  { deep: true },
 )
+
+const canGoNext = computed(() => {
+  // step 1: 날짜 필수
+  if (createModalStep.value === 1) {
+    return !!range.value.start && !!range.value.end
+  }
+
+  // step 2: 시도 필수(군구 optional)
+  if (createModalStep.value === 2) {
+    return !!selectedSido.value
+  }
+
+  // step 3: 제목 + 설명 필수
+  if (createModalStep.value === 3) {
+    return !!tripTitle.value?.trim() && !!tripDescription.value?.trim()
+  }
+
+  return true
+})
 
 defineProps({
   modelValue: { type: Boolean, default: true },
@@ -133,6 +185,7 @@ const prevStep = () => {
 }
 
 const nextStep = () => {
+  if (!canGoNext.value) return
   createModalStep.value += 1
 }
 
@@ -140,6 +193,32 @@ const close = () => {
   emit('update:modelValue', false)
   emit('close')
   createModalStep.value = 1
+  console.log(createModalStep.value)
+  store.reset()
+  range.value = { start: '', end: '' }
+}
+
+const createTrip = async () => {
+  if (!canGoNext.value) return
+
+  const data = {
+    title: tripTitle.value,
+    start_date: range.value.start,
+    end_date: range.value.end,
+    sido_code: selectedSido.value,
+    gungu_code: selectedGungu.value,
+    description: tripDescription.value,
+  }
+
+  try {
+    console.log(data)
+    // const res = await createTrip(data)
+    // const tripId = res.data.trip_id
+    // TODO: 여행 생성
+  } catch (error) {
+    console.error(error)
+  }
+  console.log(invitedUsers.value)
 }
 </script>
 
@@ -343,5 +422,18 @@ const close = () => {
 .slide-left-leave-to {
   opacity: 0;
   transform: translateX(-40px);
+}
+
+.button.is-primary:disabled {
+  background-color: #d1d9e0;
+  color: #6b7280;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.button.is-primary:disabled:hover,
+.button.is-primary:disabled:focus {
+  background-color: #d1d9e0;
 }
 </style>
