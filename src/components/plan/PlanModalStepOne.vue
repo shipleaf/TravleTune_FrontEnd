@@ -35,12 +35,15 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { getGungu, getSido } from '@/api/siGunguApi'
+import { useTripStore } from '@/stores/trip'
+import { storeToRefs } from 'pinia'
+
+const store = useTripStore()
+
+const { selectedSido, selectedGungu } = storeToRefs(store)
 
 const sidoList = ref([])
 const gunguList = ref([])
-
-const selectedSido = ref(null)
-const selectedGungu = ref(null)
 
 const loadSido = async () => {
   try {
@@ -51,7 +54,6 @@ const loadSido = async () => {
   }
 }
 
-// ✅ selectedSido를 받아서 그 값으로 군구 요청
 const loadGungu = async (sidoCode) => {
   try {
     const response = await getGungu(sidoCode)
@@ -79,6 +81,9 @@ watch(selectedSido, (newV) => {
 
 onMounted(() => {
   loadSido()
+  if (selectedSido.value) {
+    loadGungu(selectedSido.value)
+  }
 })
 </script>
 
