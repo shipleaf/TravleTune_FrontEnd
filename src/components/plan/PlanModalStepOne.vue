@@ -87,47 +87,41 @@ onMounted(() => {
   width: 100%;
   height: 540px;
   color: black;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.select-region-header {
+  flex: 0 0 auto;
 }
 
 .select-region-body {
   display: flex;
   flex: 1;
+
+  overflow: hidden;
+  min-height: 0; // flex 자식 overflow 동작 안정화
 }
 
-.sido-container {
+.sido-container,
+.gungu-container {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #212121;
+
+  /* ✅ 각자 스크롤 */
+  overflow-y: auto;
+  min-height: 0;
 }
 
-.sido-box {
-  padding: 12px;
-  padding-right: 20px;
-
-  &:last-child {
-    margin-bottom: 8px;
-  }
-
-  &:hover {
-    cursor: pointer;
-    background-color: #212121;
-  }
-}
-
-.select-region-body {
-  display: flex;
-  flex: 1;
-}
-
+/* 폭은 취향대로 */
 .sido-container {
-  display: flex;
-  flex-direction: column;
+  flex: 0 0 50%;
   border-right: 1px solid #212121;
 }
 
 .gungu-container {
-  display: flex;
-  flex-direction: column;
+  flex: 1 1 50%;
 }
 
 .region-box {
@@ -143,5 +137,51 @@ onMounted(() => {
     background-color: #212121;
     color: #fff;
   }
+}
+/* 공통: 스크롤바 공간은 최소화 */
+:deep(.sido-container::-webkit-scrollbar),
+:deep(.gungu-container::-webkit-scrollbar) {
+  width: 6px;
+}
+
+/* 트랙은 항상 투명 */
+:deep(.sido-container::-webkit-scrollbar-track),
+:deep(.gungu-container::-webkit-scrollbar-track) {
+  background: transparent;
+}
+
+/* ✅ 평소엔 thumb를 투명으로(= 안 보임) */
+:deep(.sido-container::-webkit-scrollbar-thumb),
+:deep(.gungu-container::-webkit-scrollbar-thumb) {
+  background-color: transparent;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ✅ hover 또는 내부 클릭(focus) 때만 thumb 보이게 */
+:deep(.sido-container:hover::-webkit-scrollbar-thumb),
+:deep(.sido-container:focus-within::-webkit-scrollbar-thumb),
+:deep(.gungu-container:hover::-webkit-scrollbar-thumb),
+:deep(.gungu-container:focus-within::-webkit-scrollbar-thumb) {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+/* hover 시 조금 더 진하게 */
+:deep(.sido-container:hover::-webkit-scrollbar-thumb:hover),
+:deep(.gungu-container:hover::-webkit-scrollbar-thumb:hover) {
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* Firefox(선택): 얇게 + 기본은 거의 안 보이게 */
+:deep(.sido-container),
+:deep(.gungu-container) {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+:deep(.sido-container:hover),
+:deep(.gungu-container:hover) {
+  scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
 }
 </style>
