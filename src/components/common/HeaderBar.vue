@@ -12,22 +12,46 @@
         <SpotifyButton />
         <button type="button" class="app-header-link">Explore</button>
         <button type="button" class="app-header-link">My Playlists</button>
-        <button type="button" class="app-header-button">Sign In</button>
+        <button type="button" class="app-header-avatar">
+          <img
+            v-if="me?.profileImage"
+            :src="me.profileImage"
+            alt="프로필"
+            class="app-header-avatar__img"
+            @error="onAvatarError"
+          />
+          <span v-else class="app-header-avatar__fallback">SY</span>
+        </button>
       </nav>
     </div>
   </header>
 </template>
 
 <script setup>
+import { onMounted, ref } from 'vue'
 import LpSpinner from '@/components/auth/LpSpinner.vue'
 import SpotifyButton from './SpotifyButton.vue'
 import { useRouter } from 'vue-router'
+import { mockMe } from '@/api/memberApi'
 
 const router = useRouter()
+
+const me = ref(null)
 
 const handleMain = () => {
   router.push('/')
 }
+
+function onAvatarError(e) {
+  e.target.src = '/placeholder-avatar.png'
+}
+
+onMounted(async () => {
+  const res = await mockMe()
+  console.log(res.data.profileImage)
+  me.value = res.data
+  console.log(me.value.profileImage)
+})
 </script>
 
 <style scoped>
@@ -94,20 +118,46 @@ const handleMain = () => {
   color: var(--foreground);
 }
 
-.app-header-button {
-  border: none;
+.app-header-avatar {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid color-mix(in oklch, var(--border) 65%, transparent);
   border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
+  overflow: hidden; /* ✅ 동그라미 밖으로 삐져나오는 거 컷 */
+  background: color-mix(in oklch, var(--card) 65%, transparent);
+  display: grid;
+  place-items: center;
   cursor: pointer;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  box-shadow: 0 12px 24px rgba(56, 189, 248, 0.25);
+
+  /* 기존 효과 유지 */
+  box-shadow: 0 12px 24px rgba(56, 189, 248, 0.18);
   transition:
+    border-color 0.15s ease,
     background 0.15s ease,
     box-shadow 0.15s ease,
     transform 0.1s ease;
+}
+
+.app-header-avatar:hover {
+  border-color: color-mix(in oklch, var(--primary) 55%, var(--border));
+  box-shadow: 0 14px 30px rgba(56, 189, 248, 0.28);
+  transform: translateY(-1px);
+}
+
+.app-header-avatar__img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover; /* ✅ 비율 안 깨지고 “냅다 꽉 채움” */
+  object-position: center;
+}
+
+.app-header-avatar__fallback {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--foreground);
+  opacity: 0.9;
 }
 
 .app-header-button:hover {
