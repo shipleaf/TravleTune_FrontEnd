@@ -1,120 +1,116 @@
 <template>
-  <button class="play-btn" type="button">
-    <span class="icon" aria-hidden="true">
-      <!-- Arrow (기본) -->
-      <svg class="icon-svg arrow" viewBox="0 0 24 24" fill="none">
+  <button class="u-btn" type="button" :style="{ '--clr': clr }" @click="onClick">
+    <span class="u-btn__icon-wrapper" aria-hidden="true">
+      <svg
+        viewBox="0 0 14 15"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        class="u-btn__icon-svg"
+        width="10"
+      >
         <path
-          fill-rule="evenodd"
-          clip-rule="evenodd"
-          d="M15.003 14H3.5v-4h11.502l-4.165-4.538 2.705-2.947 7.353 8.012c.747.813.747 2.133 0 2.947l-7.353 8.011-2.705-2.947L15.003 14z"
-          fill="#F0F0F0"
+          d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+          fill="currentColor"
         />
       </svg>
 
-      <!-- Play (hover) -->
-      <svg class="icon-svg play" viewBox="0 0 24 24" fill="none">
-        <path d="M9 7.5v9l8-4.5-8-4.5z" fill="#F0F0F0" />
+      <svg
+        viewBox="0 0 14 15"
+        fill="none"
+        width="10"
+        xmlns="http://www.w3.org/2000/svg"
+        class="u-btn__icon-svg u-btn__icon-svg--copy"
+      >
+        <path
+          d="M13.376 11.552l-.264-10.44-10.44-.24.024 2.28 6.96-.048L.2 12.56l1.488 1.488 9.432-9.432-.048 6.912 2.304.024z"
+          fill="currentColor"
+        />
       </svg>
     </span>
 
-    <span class="label">Play Now</span>
+    <span class="u-btn__label">
+      {{ label }}
+    </span>
   </button>
 </template>
 
 <script setup>
-// JS 필요 없음 (hover는 CSS로 처리)
+defineProps({
+  label: { type: String, default: 'Explore All' },
+  clr: { type: String, default: '#7808d0' },
+})
+
+const emit = defineEmits(['click'])
+
+const onClick = (e) => emit('click', e)
 </script>
 
 <style scoped lang="scss">
-.play-btn {
-  cursor: pointer;
-  padding: 12px;
-  border: 0;
-  border-radius: 24px;
+.u-btn {
+  line-height: 1;
+  text-decoration: none;
   display: inline-flex;
+  border: none;
+  cursor: pointer;
   align-items: center;
-  gap: 16px;
+  gap: 0.75rem;
 
-  background: linear-gradient(to right, #2891c5, #13b6da);
-  transition:
-    box-shadow 0.5s ease,
-    transform 0.2s ease;
+  background-color: var(--clr);
+  color: #fff;
+  border-radius: 10rem;
+  font-weight: 600;
+
+  padding: 0.75rem 1.5rem;
+  padding-left: 20px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  transition: background-color 0.3s;
 
   &:hover {
-    box-shadow: 0 15px 50px -15px #13b6da;
-    transform: translateY(-1px);
+    background-color: #000;
+  }
+
+  &:hover .u-btn__icon-wrapper {
+    color: #000;
+  }
+
+  &:hover .u-btn__icon-svg:first-child {
+    transition: transform 0.3s ease-in-out;
+    transform: translate(150%, -150%);
+  }
+
+  &:hover .u-btn__icon-svg--copy {
+    transition: transform 0.3s ease-in-out 0.1s;
+    transform: translate(0);
   }
 }
 
-.icon {
-  height: 48px;
-  width: 48px;
-  background: #0a0a0a;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
-  border-radius: 999px;
-  padding: 12px;
+.u-btn__icon-wrapper {
+  flex-shrink: 0;
+  width: 25px;
+  height: 25px;
+  position: relative;
 
+  color: var(--clr);
+  background-color: #fff;
+
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  position: relative; // ✅ 겹쳐놓기
-
-  .icon-svg {
-    position: absolute;
-    inset: 12px; // padding과 동일하게
-    width: auto;
-    height: auto;
-    transform-origin: center;
-  }
+  overflow: hidden;
 }
 
-/* ✅ 기본 상태: 화살표 보이고, 재생 숨김 */
-.arrow {
-  opacity: 1;
-  transform: rotate(0deg) scale(1);
-  animation: icon-in 0.45s;
+.u-btn__icon-svg--copy {
+  position: absolute;
+  transform: translate(-150%, 150%);
 }
 
-.play {
-  opacity: 0;
-  transform: rotate(-180deg) scale(1.35); // 🔥 기본 크기 크게
-}
-
-/* ✅ Hover 상태: 화살표 숨기고, 재생 나타남 (Uiverse 느낌) */
-.play-btn:hover .arrow {
-  opacity: 0;
-  transform: rotate(180deg) scale(0);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-
-.play-btn:hover .play {
-  opacity: 1;
-  transform: rotate(0deg) scale(1.35); // 동일한 크기 유지
-  animation: icon-in 0.45s;
-}
-
-/* Uiverse 스타일 애니메이션 */
-@keyframes icon-in {
-  0% {
-    transform: rotate(-180deg) scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: rotate(-10deg) scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: rotate(0deg) scale(1);
-    opacity: 1;
-  }
-}
-
-.label {
-  font-size: 1.9rem;
+.u-btn__label {
+  display: inline-block;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
-  padding-right: 12px;
-  line-height: 1;
 }
 </style>

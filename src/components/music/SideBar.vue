@@ -8,7 +8,7 @@
             v-model="keyword"
             type="text"
             class="sidebar-search-input"
-            placeholder="떠나고 싶은 관광지를 입력해 주세요!"
+            placeholder="떠나고 싶은 관광지를 입력해 주세요"
           />
           <button class="setting-btn" type="button" @click="openRegionModal">
             <span class="bar bar1"></span>
@@ -212,10 +212,14 @@ const handleSelectSpot = (spot) => {
   flex: 1;
   border-radius: 12px;
   border: 1px solid var(--input);
-  padding: 10px 14px 10px 34px;
+  padding: 14px;
   background: color-mix(in oklch, var(--background) 60%, transparent);
   color: var(--foreground);
   font-size: 14px;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .sidebar-search-input::placeholder {

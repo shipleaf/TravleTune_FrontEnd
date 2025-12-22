@@ -11,16 +11,15 @@
     <!-- 상단 정보 영역 -->
     <div class="map-spot-top-panel">
       <div class="button-container">
-        <OpenAlbumButton />
+        <OpenAlbumButton label="음악으로 떠나보기" clr="#7808d0" @click="renderMusicPlayer" />
       </div>
-      <h1 class="map-spot-title">{{ selectedSpot.title }}</h1>
-      <span>{{ selectedSpot.addr1 }} {{ selectedSpot.addr2 }}</span>
-      <p class="map-spot-description desc-60">
-        {{ selectedSpot.description }}
-      </p>
-    </div>
-    <div class="album-container">
-      <AlbumScene v-if="selectedSpot" class="sheet-panel" @loaded="clearOverlay" />
+      <div class="text-area">
+        <h1 class="map-spot-title">{{ selectedSpot.title }}</h1>
+        <span>{{ selectedSpot.addr1 }} {{ selectedSpot.addr2 }}</span>
+        <p class="map-spot-description desc-60">
+          {{ selectedSpot.description }}
+        </p>
+      </div>
     </div>
   </main>
 
@@ -36,19 +35,25 @@
 import OpenAlbumButton from './OpenAlbumButton.vue'
 import { storeToRefs } from 'pinia'
 import MapContainer from './MapContainer.vue'
-import AlbumScene from './AlbumScene.vue'
+
 import { useSpotStore } from '@/stores/spot'
 
 const store = useSpotStore()
-const { selectedSpot } = storeToRefs(store)
+const { selectedSpot, selectedPlayerSpot } = storeToRefs(store)
+
+const renderMusicPlayer = () => {
+  selectedPlayerSpot.value = selectedSpot
+  console.log(selectedPlayerSpot.value)
+}
 </script>
 
 <style scoped>
-.button-container {
-}
 .album-container {
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
+  z-index: 100;
 }
 /* MapArea.vue */
 .map-area {
@@ -89,14 +94,20 @@ const { selectedSpot } = storeToRefs(store)
   padding: 24px 32px;
   max-width: 100%;
 
-  /* ✅ 세로 간격 고정용 */
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .map-spot-title {
   width: 100%; /* ✅ 제목은 항상 100% */
+}
+
+.text-area {
+  max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .map-spot-description.desc-60 {

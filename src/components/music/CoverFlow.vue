@@ -30,14 +30,6 @@
       </button>
     </div>
   </div>
-
-  <svg class="scroll-icon" viewBox="0 0 24 24">
-    <path
-      fill="currentColor"
-      d="M20 6H23L19 2L15 6H18V18H15L19 22L23 18H20V6M9 3.09C11.83 3.57 14 6.04 14 9H9V3.09M14 11V15C14 18.3 11.3 21 8 21S2 18.3 2 15V11H14M7 9H2C2 6.04 4.17 3.57 7 3.09V9Z"
-    ></path>
-  </svg>
-
   <div class="drag-proxy" ref="dragProxyRef"></div>
 </template>
 
@@ -45,6 +37,12 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import gsap from 'https://cdn.skypack.dev/gsap@3.7.0'
 import Draggable from 'https://cdn.skypack.dev/gsap@3.7.0/Draggable'
+import { useToolStore } from '@/stores/tools'
+import { storeToRefs } from 'pinia'
+
+const tools = useToolStore()
+
+const { isReady } = storeToRefs(tools)
 
 gsap.registerPlugin(Draggable)
 
@@ -87,7 +85,7 @@ const handlePrev = () => {
 }
 
 onMounted(() => {
-  console.log(props.images)
+  isReady.value = false
 
   const boxesEl = boxesRef.value
   const dragProxyEl = dragProxyRef.value
@@ -300,22 +298,31 @@ onMounted(() => {
   }
   boxesEl.addEventListener('click', boxClickHandler)
 
-  // 드래그
+  // 드래그 감도(원본 0.001~0.01 계열). 지금 step 기반이면 step과 섞는 게 안정적
+  const DRAG_SENS = 0.0015
+
   dragInstance = Draggable.create(dragProxyEl, {
     type: 'x',
-    trigger: boxesEl,
+    trigger: boxesEl, // ✅ 영역 전체 드래그 가능
+    allowNativeTouchScrolling: false,
     onPress() {
+      // 현재 위치를 시작점으로 잡기
       this.startOffset = PLAYHEAD.position
     },
     onDrag() {
-      const delta = (this.startX - this.x) * 0.01
+      // ✅ 드래그 이동량을 position에 반영
+      const delta = (this.startX - this.x) * DRAG_SENS
       SCRUB.vars.position = this.startOffset + delta
       SCRUB.invalidate().restart()
     },
     onDragEnd() {
+      // ✅ 끝나면 스냅
       goToPosition(PLAYHEAD.position)
     },
   })[0]
+
+  gsap.to(boxesEl, { autoAlpha: 1, duration: 0.2 })
+  isReady.value = true
 })
 
 onBeforeUnmount(() => {

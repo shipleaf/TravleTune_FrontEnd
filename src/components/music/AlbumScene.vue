@@ -494,13 +494,13 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('click', handleClick)
-  window.removeEventListener('mousemove', handleMouseMove)
-  window.removeEventListener('resize', handleResize)
-
-  if (animationId) {
-    cancelAnimationFrame(animationId)
+  const canvas = canvasRef.value
+  if (canvas) {
+    canvas.removeEventListener('click', handleClick)
+    canvas.removeEventListener('mousemove', handleMouseMove)
   }
+  window.removeEventListener('resize', handleResize)
+  if (animationId) cancelAnimationFrame(animationId)
 })
 </script>
 

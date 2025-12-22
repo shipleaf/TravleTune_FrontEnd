@@ -1,7 +1,16 @@
 ﻿<template>
-  <div class="page">
+  <div class="app-page">
     <HeaderBar />
-    <TravelPlanning />
+    <div class="app-main">
+      <div class="page-info">
+        <div class="page-title">음악 추천</div>
+        <div class="page-desc">관광지의 분위기에 맞는 음악을 들어보세요</div>
+      </div>
+
+      <div class="contents">
+        <TravelPlanning />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -11,7 +20,39 @@ import TravelPlanning from '@/components/plan/TravelPlanning.vue'
 </script>
 
 <style lang="scss" scoped>
-.page {
+.app-page {
   width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  width: 100%;
+  padding: 0 15%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.page-info {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contents {
+  padding: 24px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.page-desc {
+  font-size: 1rem;
+  color: oklch(0.65 0.02 240);
 }
 </style>
