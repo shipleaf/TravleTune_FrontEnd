@@ -3,8 +3,8 @@ import axiosApi from './axiosApi'
 import { useTokenStore } from '@/stores/userTokenStore'
 
 // 로그인 api
-export const login = (credentials) => {
-  const response = axiosApi({
+export const login = async (credentials) => {
+  const response = await axiosApi({
     url: '/members/login',
     method: 'post',
     data: credentials,

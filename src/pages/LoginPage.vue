@@ -188,7 +188,8 @@ const handleLogin = async () => {
   }
 
   try {
-    await login(credentials)
+    const res = await login(credentials)
+    console.log(res.success)
     router.push('/')
   } catch (error) {
     console.error(error)
