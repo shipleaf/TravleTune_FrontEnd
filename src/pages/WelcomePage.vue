@@ -6,7 +6,7 @@
 
     <main class="main-container">
       <div class="left">
-        <FireWorks />
+        <!-- <FireWorks /> -->
         <!-- <ShootingStars class="bg" :count="40" /> -->
         <AttractionRecommendations />
       </div>
@@ -79,7 +79,7 @@
       </section>
 
       <div class="right">
-        <FireWorks />
+        <!-- <FireWorks /> -->
         <!-- <ShootingStars class="bg" :count="40" /> -->
         <div class="friend-container">
           <FriendList />

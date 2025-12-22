@@ -9,14 +9,20 @@ import MyPage from '../pages/MyPage.vue'
 import SpotifySuccess from '@/pages/SpotifySuccess.vue'
 import SignupSuccess from '@/pages/SignupSuccess.vue'
 import PlanDetailPage from '@/pages/PlanDetailPage.vue'
+import LandingPage from '@/pages/LandingPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'welcome',
+      name: 'main',
       component: WelcomePage,
+    },
+    {
+      path: '/landing',
+      name: 'welcome',
+      component: LandingPage,
     },
     {
       path: '/login',

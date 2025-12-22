@@ -357,6 +357,10 @@ onMounted(async () => {
 
 .btn--reject {
   border-color: rgba(239, 68, 68, 0.32);
+
+  &:hover {
+    color: #fff;
+  }
 }
 
 .btn--ghost {

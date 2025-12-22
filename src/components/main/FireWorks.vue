@@ -84,7 +84,7 @@ function makeRocket(
 
   const startY = H + 10
   const vx = (targetX - x) / rand(55, 85)
-  const vy = -(rand(10, 14) * props.density)
+  const vy = -(rand(6, 9) * props.density)
 
   rockets.push({
     x,

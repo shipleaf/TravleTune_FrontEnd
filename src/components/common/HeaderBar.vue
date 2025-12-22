@@ -8,7 +8,6 @@
         <span class="app-logo-text">TravelTunes</span>
       </div>
 
-      <input type="checkbox" id="theme-mode" class="mode" hidden="" />
       <div class="container">
         <div class="wrap">
           <input
