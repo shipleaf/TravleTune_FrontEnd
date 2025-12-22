@@ -110,11 +110,6 @@ onMounted(async () => {
   flex-direction: column;
   gap: 48px;
   overflow-y: auto;
-  padding: 32px;
-
-  @media (min-width: 1024px) {
-    padding: 48px;
-  }
 }
 
 .travel-section {

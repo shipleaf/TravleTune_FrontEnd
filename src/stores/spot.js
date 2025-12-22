@@ -4,6 +4,7 @@ import { ref } from 'vue'
 export const useSpotStore = defineStore('spot', () => {
   // variable
   const selectedSpot = ref(null)
+  const selectedPlayerSpot = ref(null)
 
   // actions
   const setSelectedSpot = (newSpot) => {
@@ -16,5 +17,5 @@ export const useSpotStore = defineStore('spot', () => {
     selectedSpot.value = null
   }
 
-  return { selectedSpot, setSelectedSpot, deleteSelectedSpot }
+  return { selectedSpot, setSelectedSpot, deleteSelectedSpot, selectedPlayerSpot }
 })
