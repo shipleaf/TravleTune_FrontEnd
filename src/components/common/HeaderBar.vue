@@ -126,7 +126,8 @@ import LpSpinner from '@/components/auth/LpSpinner.vue'
 import SpotifyButton from './SpotifyButton.vue'
 import { useRouter, useRoute } from 'vue-router'
 // import { mockMe as me } from '@/api/memberApi'
-import { logout, me } from '@/api/memberApi'
+import { me } from '@/api/memberApi'
+import { logout } from '@/api/memberApi'
 import { Users, LogOut, Navigation, CircleUser } from 'lucide-vue-next'
 
 const route = useRoute()

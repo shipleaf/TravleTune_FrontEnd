@@ -10,10 +10,12 @@
 
     <!-- 상단 정보 영역 -->
     <div class="map-spot-top-panel">
-      <h1 class="map-spot-title">
-        {{ selectedSpot.title }}
-      </h1>
-      <p class="map-spot-description">
+      <div class="button-container">
+        <OpenAlbumButton />
+      </div>
+      <h1 class="map-spot-title">{{ selectedSpot.title }}</h1>
+      <span>{{ selectedSpot.addr1 }} {{ selectedSpot.addr2 }}</span>
+      <p class="map-spot-description desc-60">
         {{ selectedSpot.description }}
       </p>
     </div>
@@ -31,6 +33,7 @@
 </template>
 
 <script setup>
+import OpenAlbumButton from './OpenAlbumButton.vue'
 import { storeToRefs } from 'pinia'
 import MapContainer from './MapContainer.vue'
 import AlbumScene from './AlbumScene.vue'
@@ -41,6 +44,8 @@ const { selectedSpot } = storeToRefs(store)
 </script>
 
 <style scoped>
+.button-container {
+}
 .album-container {
   width: 100%;
   height: 100%;
@@ -80,9 +85,27 @@ const { selectedSpot } = storeToRefs(store)
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
+  top: 20%;
   padding: 24px 32px;
-  max-width: 720px;
+  max-width: 100%;
+
+  /* ✅ 세로 간격 고정용 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.map-spot-title {
+  width: 100%; /* ✅ 제목은 항상 100% */
+}
+
+.map-spot-description.desc-60 {
+  width: 60%;
+  max-width: 60%;
+  line-height: 1.6; /* 가장 많이 쓰는 값 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .map-spot-title {
@@ -114,6 +137,7 @@ const { selectedSpot } = storeToRefs(store)
 }
 
 .map-spot-overlay {
+  pointer-events: none;
   position: absolute;
   inset: 0;
   background: linear-gradient(to bottom, rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.9));

@@ -4,9 +4,6 @@
   <div @click="handleSelectSpot" class="spot-card">
     <div class="spot-card-content">
       <div class="spot-card-title-row">
-        <div class="spot-card-pin">
-          <Icon icon="ic:outline-location-on" width="20" color="white" />
-        </div>
         <div class="spot-card-title">
           {{ spot.title }}
         </div>
@@ -14,19 +11,19 @@
       <div class="spot-card-description">
         {{ spot.description }}
       </div>
+      <div class="spot-card-addr">{{ spot.addr1 }} {{ spot.addr2 }}</div>
     </div>
     <div class="spot-card-image-wrapper">
       <img class="spot-card-image" :src="spot.image || '/placeholder.svg'" :alt="spot" />
-      <!--이미지 오버레이-->
-      <!-- <div class="spot-card-image-gradient" /> -->
     </div>
-    <div v-if="isActive" class="spot-card-active-bar"></div>
+    <Transition name="active-bar">
+      <div v-if="isActive" class="spot-card-active-bar"></div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { Icon } from '@iconify/vue'
 import { useSpotStore } from '@/stores/spot'
 import { storeToRefs } from 'pinia'
 
@@ -53,9 +50,10 @@ const isActive = computed(
   height: fit-content;
   padding: 12px;
   display: flex;
+  justify-content: space-between;
   position: relative;
   overflow: hidden;
-  border-radius: 6px;
+  border-top: 1px solid oklch(0.65 0.02 240);
   background: color-mix(in oklch, var(--card) 80%, transparent);
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.5);
@@ -68,8 +66,8 @@ const isActive = computed(
 
 .spot-card-image-wrapper {
   position: relative;
-  width: 208px;
-  height: 117px;
+  width: 160px;
+  height: 100px;
   border-radius: 1rem;
   overflow: hidden;
 }
@@ -108,10 +106,12 @@ const isActive = computed(
 }
 
 .spot-card-content {
+  flex: 1; /* ✅ 이미지 영역 제외한 나머지 */
+  min-width: 0; /* ✅ line-clamp + ellipsis 필수 */
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 16px;
+  padding: 16px 12px 16px 0;
 }
 
 .spot-card-title-row {
@@ -122,22 +122,60 @@ const isActive = computed(
 
 .spot-card-title {
   font-weight: 600;
-  font-size: 20px;
+  font-size: 1.1rem;
 }
 
 .spot-card-description {
-  font-size: 14px;
+  font-size: 0.8rem;
   color: var(--muted-foreground);
   line-height: 1.4;
+
+  /* ✅ 2줄 고정 + 2줄 초과 시 ... */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* ✅ 한 줄이어도 2줄 높이 확보 */
+  min-height: calc(0.8rem * 1.4 * 2);
 }
 
-/* 선택된 카드 왼쪽 강조 라인 */
+.spot-card-addr {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* bar 기본 스타일 */
 .spot-card-active-bar {
   position: absolute;
   left: 0;
   top: 0;
   width: 3px;
   height: 100%;
-  background: var(--primary);
+  background-color: #1f6feb;
+  box-shadow: 0 0 12px rgba(31, 111, 235, 0.8);
+}
+
+/* enter / leave 애니메이션 */
+.active-bar-enter-active,
+.active-bar-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.active-bar-enter-from,
+.active-bar-leave-to {
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.active-bar-enter-to,
+.active-bar-leave-from {
+  opacity: 1;
+  transform: scaleY(1);
 }
 </style>

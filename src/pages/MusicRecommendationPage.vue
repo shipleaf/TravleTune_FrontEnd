@@ -3,7 +3,10 @@
     <HeaderBar />
 
     <div class="app-main">
-      <!-- <div class="page-title">music-recommedations</div> -->
+      <div class="page-info">
+        <div class="page-title">음악 추천</div>
+        <div class="page-desc">관광지의 분위기에 맞는 음악을 들어보세요</div>
+      </div>
       <div class="contents">
         <SideBar />
         <MapArea />
@@ -39,6 +42,20 @@ import MapArea from '@/components/music/MapArea.vue'
   display: flex;
 }
 
-.mapContainer {
+.page-info {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.page-desc {
+  font-size: 1rem;
+  color: oklch(0.65 0.02 240);
 }
 </style>

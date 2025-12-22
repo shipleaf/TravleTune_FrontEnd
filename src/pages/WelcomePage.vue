@@ -211,11 +211,6 @@ onBeforeUnmount(() => {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
-  /* 불꽃이 너무 “선명”하면 아래로도 한번 더 눌러주기 */
-  /* 선택 */
-  // mix-blend-mode: multiply;
-  // opacity: 0.95;
-
   pointer-events: none; // ✅ 클릭 방해 금지
 }
 .page {
