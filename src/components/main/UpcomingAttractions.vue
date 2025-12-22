@@ -135,6 +135,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .component {
   width: 100%;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
   gap: 10px;

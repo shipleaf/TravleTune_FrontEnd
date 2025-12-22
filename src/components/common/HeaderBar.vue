@@ -53,47 +53,62 @@
 
       <nav class="app-header-nav">
         <SpotifyButton />
-        <button type="button" class="app-header-link">Explore</button>
-        <button type="button" class="app-header-link">My Playlists</button>
+        <!-- <button type="button" class="app-header-link">Explore</button>
+        <button type="button" class="app-header-link">My Playlists</button> -->
         <button type="button" class="app-header-avatar" @click.stop="toggleCard">
           <img
-            v-if="me?.profileImage"
-            :src="me.profileImage"
+            v-if="myData?.data.profileImage"
+            :src="myData.data.profileImage"
             alt="프로필"
             class="app-header-avatar__img"
             @error="onAvatarError"
           />
-          <span v-else class="app-header-avatar__fallback">SY</span>
+          <span v-else class="app-header-avatar__fallback">
+            {{ (myData?.data.nickname ?? 'SY').slice(0, 2).toUpperCase() }}
+          </span>
         </button>
         <Transition name="dropdown" appear>
-          <div class="card" v-if="isCardOpen && me?.profileImage" @click.stop>
+          <div class="card" v-if="isCardOpen" @click.stop>
             <div class="profile-row">
               <div class="app-header-avatar">
-                <img :src="me.profileImage" alt="profile" class="app-header-avatar__img" />
+                <img
+                  v-if="myData?.data.profileImage"
+                  :src="myData.data.profileImage"
+                  alt="profile"
+                  class="app-header-avatar__img"
+                  @error="onAvatarError"
+                />
+                <span v-else class="app-header-avatar__fallback">
+                  {{ (myData?.data.nickname ?? 'SY').slice(0, 2).toUpperCase() }}
+                </span>
               </div>
+
               <div class="user-desc">
-                <span class="user-nickname">{{ me.nickname }}</span>
-                <span class="user-email">{{ me.email }}</span>
+                <span class="user-nickname">{{ myData?.data.nickname ?? '사용자' }}</span>
+                <span class="user-email">{{ myData?.data.email ?? '' }}</span>
               </div>
             </div>
+
             <div class="separator"></div>
+
             <ul class="list">
-              <li class="element">
+              <li class="element" @click="handleTravel">
                 <Navigation />
                 <p class="label">내 여행</p>
               </li>
               <li class="element">
                 <Users />
-                <p class="label">친구 목록</p>
+                <p class="label" @click="handleFriendList">친구 목록</p>
               </li>
               <li class="element">
                 <CircleUser />
                 <p class="label">마이페이지</p>
               </li>
             </ul>
+
             <div class="separator"></div>
             <ul class="list">
-              <li class="element delete">
+              <li class="element delete" @click="handleLogout">
                 <LogOut />
                 <p class="label">로그아웃</p>
               </li>
@@ -110,10 +125,12 @@ import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import LpSpinner from '@/components/auth/LpSpinner.vue'
 import SpotifyButton from './SpotifyButton.vue'
 import { useRouter, useRoute } from 'vue-router'
-import { mockMe } from '@/api/memberApi'
+// import { mockMe as me } from '@/api/memberApi'
+import { logout, me } from '@/api/memberApi'
 import { Users, LogOut, Navigation, CircleUser } from 'lucide-vue-next'
 
 const route = useRoute()
+const router = useRouter()
 
 const activeTab = ref('home')
 
@@ -137,8 +154,7 @@ watch(
   { immediate: true },
 )
 
-const router = useRouter()
-const me = ref(null)
+const myData = ref(null)
 
 const isCardOpen = ref(false)
 
@@ -159,18 +175,41 @@ const onDocClick = () => {
 }
 
 onMounted(async () => {
-  const res = await mockMe()
-  me.value = res.data
-
-  document.addEventListener('click', onDocClick)
+  try {
+    const res = await me()
+    myData.value = res.data
+    document.addEventListener('click', onDocClick)
+  } catch {
+    alert('로그인 세션이 만료되었습니다.')
+    router.push('/login')
+  }
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
 })
 
+const handleTravel = () => {
+  router.push('/travel-plan')
+}
+
+const handleFriendList = () => {
+  router.push('/friend')
+}
+
 const handleMain = () => {
   router.push('/')
+}
+
+const handleLogout = async () => {
+  const ok = confirm('정말 로그아웃 하시겠습니까?')
+  if (ok) {
+    try {
+      await logout()
+    } catch {
+      alert('로그아웃 실패!')
+    }
+  }
 }
 </script>
 
@@ -539,6 +578,8 @@ background-image: linear-gradient(135deg, rgba(36, 40, 50, 1) 0%, rgba(36, 40, 5
 .user-desc {
   font-size: 14px;
   font-weight: 500;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-email {

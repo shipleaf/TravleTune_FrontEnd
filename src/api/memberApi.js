@@ -3,8 +3,8 @@ import axiosApi from './axiosApi'
 import { useTokenStore } from '@/stores/userTokenStore'
 
 // 로그인 api
-export const login = async (credentials) => {
-  const response = await axiosApi({
+export const login = (credentials) => {
+  const response = axiosApi({
     url: '/members/login',
     method: 'post',
     data: credentials,
@@ -20,6 +20,14 @@ export const login = async (credentials) => {
   }
 
   return response
+}
+
+export const logout = () => {
+  return axiosApi({
+    url: '/members/logout',
+    method: 'post',
+    withCredentials: true,
+  })
 }
 
 // 회원가입 api
@@ -45,6 +53,14 @@ export const checkEmail = (email) => {
     url: '/members/check-email',
     method: 'get',
     params: { email: email },
+    withCredentials: true,
+  })
+}
+
+export const me = () => {
+  return axiosApi({
+    url: '/members/me',
+    method: 'get',
     withCredentials: true,
   })
 }

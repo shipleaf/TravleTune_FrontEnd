@@ -2,7 +2,7 @@
   <section class="friend-panel">
     <header class="panel-header">
       <h3 class="panel-title">친구</h3>
-      <button class="friend-button">
+      <button class="friend-button" @click="navigateToFriend">
         <span class="panel-sub">자세히 보기</span>
         <ChevronRight size="14" />
       </button>
@@ -78,11 +78,12 @@ import {
   getFriendsMock as getFriends,
 } from '@/api/friendApi'
 import { ChevronRight, Check, X } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 
 // ✅ state
 const receivedRequests = ref([])
 const friends = ref([])
-
+const router = useRouter()
 const reqLoading = ref(false)
 const friendsLoading = ref(false)
 
@@ -108,6 +109,10 @@ const loadReceivedRequests = async () => {
   } finally {
     reqLoading.value = false
   }
+}
+
+const navigateToFriend = () => {
+  router.push('/friend')
 }
 
 const loadFriends = async () => {

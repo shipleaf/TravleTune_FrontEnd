@@ -238,3 +238,25 @@ export const getFriendsMock = () => {
     }, 1000) // ✅ 1초 네트워크 지연
   })
 }
+
+export const friendRequest = (memberId) => {
+  return axiosApi({
+    url: '/friends',
+    method: 'post',
+    data: {
+      to_member_id: memberId,
+    },
+    withCredentials: true,
+  })
+}
+
+export const friendRequestMock = (memberId) => {
+  console.log('mock api: ', memberId)
+  return new Promise.resolve({
+    data: {
+      success: true,
+      data: null,
+      error: null,
+    },
+  })
+}

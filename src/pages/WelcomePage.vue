@@ -6,7 +6,10 @@
 
     <main class="main-container">
       <div class="left">
-        <!-- <FireWorks /> -->
+        <div class="firework-container">
+          <!-- <FireWorks /> -->
+        </div>
+        <div class="right-overlay" aria-hidden="true"></div>
         <!-- <ShootingStars class="bg" :count="40" /> -->
         <AttractionRecommendations />
       </div>
@@ -79,7 +82,10 @@
       </section>
 
       <div class="right">
-        <!-- <FireWorks /> -->
+        <div class="firework-container">
+          <!-- <FireWorks /> -->
+        </div>
+        <div class="right-overlay" aria-hidden="true"></div>
         <!-- <ShootingStars class="bg" :count="40" /> -->
         <div class="friend-container">
           <FriendList />
@@ -181,6 +187,37 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+.firework-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ✅ 검은 블러 막 (불꽃 위, 컨텐츠 아래) */
+.right-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  /* 검은 막 + 살짝 그라데이션(더 고급짐) */
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.72) 70%,
+    rgba(0, 0, 0, 0.82)
+  );
+
+  /* 블러 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  /* 불꽃이 너무 “선명”하면 아래로도 한번 더 눌러주기 */
+  /* 선택 */
+  // mix-blend-mode: multiply;
+  // opacity: 0.95;
+
+  pointer-events: none; // ✅ 클릭 방해 금지
+}
 .page {
   width: 100%;
   min-height: 100vh;
@@ -207,6 +244,7 @@ onBeforeUnmount(() => {
   inset: 0;
   left: 12px;
   top: 32px;
+  z-index: 3;
 }
 
 .content-container {
@@ -221,6 +259,7 @@ onBeforeUnmount(() => {
 
 .mood-card {
   width: 100%;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
   gap: 18px;
