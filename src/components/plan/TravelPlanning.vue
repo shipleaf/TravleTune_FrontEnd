@@ -91,7 +91,6 @@ onMounted(async () => {
     _endTs: Date.parse(t.end_date),
   }))
 
-  // 이미지까지 붙인 후 한 번에 할당(아래 2번)
   const withImages = await Promise.all(
     base.map(async (trip) => {
       const imageRes = await getTripImageMock(trip.trip_id)
@@ -141,7 +140,7 @@ onMounted(async () => {
   }
 
   @media (min-width: 1024px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

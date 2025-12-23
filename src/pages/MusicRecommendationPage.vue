@@ -61,7 +61,7 @@ watch(
 
 onBeforeUnmount(() => {
   unlockBodyScroll()
-  selectedPlayerSpot.value(null)
+  selectedPlayerSpot.value = null
 })
 </script>
 

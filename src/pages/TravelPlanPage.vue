@@ -3,8 +3,8 @@
     <HeaderBar />
     <div class="app-main">
       <div class="page-info">
-        <div class="page-title">음악 추천</div>
-        <div class="page-desc">관광지의 분위기에 맞는 음악을 들어보세요</div>
+        <div class="page-title">내 여행</div>
+        <div class="page-desc">TravelTune 친구들과 나만의 여행을 계획해 보세요!</div>
       </div>
 
       <div class="contents">
@@ -29,7 +29,7 @@ import TravelPlanning from '@/components/plan/TravelPlanning.vue'
 
 .app-main {
   width: 100%;
-  padding: 0 15%;
+  padding: 0 20%;
   display: flex;
   flex-direction: column;
   min-height: 0;

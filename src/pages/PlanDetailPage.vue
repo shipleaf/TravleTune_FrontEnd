@@ -3,13 +3,17 @@
     <HeaderBar />
 
     <div class="map-attractions-container">
-      <!-- ✅ 왼쪽: 검색 + 리스트 -->
-      <div>
-        <TripDetailSidebar />
+      <div class="sidebar">
+        <TripDetailSidebar
+          :trip-id="Number(route.params.trip_id)"
+          :trip-detail="tripDetail"
+          :loading="isLoading"
+          :error-msg="errorMsg"
+          @itineraries:loaded="onItinerariesLoaded"
+        />
       </div>
-      <!-- ✅ 오른쪽: 지도 -->
       <section class="map-wrap">
-        <div id="map"></div>
+        <TripKakaoMap :places="mapPlaces" />
       </section>
     </div>
   </div>
@@ -18,33 +22,47 @@
 <script setup>
 import HeaderBar from '@/components/common/HeaderBar.vue'
 import TripDetailSidebar from '@/components/plan/TripDetailSidebar.vue'
-import { onMounted } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { getTripDetailMock } from '@/api/tripApi'
+import TripKakaoMap from '@/components/plan/TripKakaoMap.vue'
 
-const kakaoKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY
-const initMap = function () {
-  const container = document.getElementById('map')
-  const options = {
-    // eslint-disable-next-line
-    center: new kakao.maps.LatLng(37.5665, 126.978),
-    level: 3,
-  }
-  // eslint-disable-next-line
-  const map = new kakao.maps.Map(container, options)
+const route = useRoute()
+
+const tripDetail = ref(null)
+const isLoading = ref(false)
+const errorMsg = ref('')
+
+const mapPlaces = ref([])
+
+const onItinerariesLoaded = ({ day, places }) => {
+  mapPlaces.value = places
 }
 
-onMounted(() => {
-  if (window.kakao && window.kakao.maps) {
-    initMap()
-  } else {
-    const script = document.createElement('script')
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoKey}&autoload=false`
-    script.onload = () => {
-      // eslint-disable-next-line
-      kakao.maps.load(initMap)
-    }
-    document.head.appendChild(script)
+const fetchTripDetail = async (tripId) => {
+  isLoading.value = true
+  errorMsg.value = ''
+  try {
+    const res = await getTripDetailMock(tripId)
+    console.log(res.data)
+    if (!res.success) throw new Error(res.error?.message ?? 'detail fetch fail')
+    tripDetail.value = res.data
+  } catch (e) {
+    tripDetail.value = null
+    errorMsg.value = e?.message ?? '에러가 발생했습니다.'
+  } finally {
+    isLoading.value = false
   }
-})
+}
+
+watch(
+  () => route.params.plan_id,
+  (tripId) => {
+    if (!tripId) return
+    fetchTripDetail(tripId)
+  },
+  { immediate: true },
+)
 </script>
 
 <style lang="scss" scoped>
@@ -57,9 +75,9 @@ onMounted(() => {
 
 /* ✅ 전체 레이아웃: 좌(패널) + 우(지도) */
 .map-attractions-container {
+  width: 100%;
   flex: 1;
-  display: grid;
-  grid-template-columns: 380px 1fr; /* 왼쪽 고정폭 + 오른쪽 가변 */
+  display: flex;
   gap: 16px;
   padding: 16px;
   min-height: 0; /* 스크롤 영역 위해 중요 */
@@ -272,8 +290,14 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.9);
 }
 
-/* ✅ 지도 영역 */
+.sidebar {
+  width: 100%;
+  max-width: 540px;
+}
+
 .map-wrap {
+  display: flex;
+  flex: 1;
   min-height: 0;
   border-radius: 16px;
   overflow: hidden;

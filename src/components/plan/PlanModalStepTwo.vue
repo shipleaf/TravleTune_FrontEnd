@@ -39,7 +39,7 @@
             class="invited-chip"
             @click="removeInvite(u.member_id)"
           >
-            <span class="invited-chip-name">{{ u.name }}</span>
+            <span class="invited-chip-name">{{ u.nickname }}</span>
             <span class="invited-chip-x">×</span>
           </button>
         </div>
@@ -79,9 +79,18 @@
           :key="user.member_id"
           @click="toggleInvite(user)"
         >
-          <img :src="user.profile_image" alt="Avatar" class="profile-image" />
+          <img
+            v-if="user.profile_image"
+            :src="user.profile_image"
+            alt="Avatar"
+            class="profile-image"
+          />
+          <div v-else class="profile-image">
+            <User />
+          </div>
+
           <div class="user-info">
-            <div>{{ user.name }}</div>
+            <div>{{ user.nickname }}</div>
             <span>{{ user.email }}</span>
           </div>
         </div>
@@ -99,9 +108,10 @@ import { ref, watch, onBeforeUnmount } from 'vue'
 import LoadSpinner from '../common/LoadSpinner.vue'
 import { useTripStore } from '@/stores/trip'
 
-import { mockSearchUser as searchUserApi } from '@/api/friendApi'
+// import { mockSearchUser as searchUserApi } from '@/api/friendApi'
 import { storeToRefs } from 'pinia'
-// import { searchUser as searchUserApi } from '@/api/memberApi'
+import { searchUser as searchUserApi } from '@/api/friendApi'
+import { User } from 'lucide-vue-next'
 
 const store = useTripStore()
 
@@ -141,7 +151,6 @@ const currentKeyword = ref('') // ✅ “현재 검색어” 고정용
 const fetchUsers = async ({ keyword, nextPage, append }) => {
   const currentId = ++requestId
 
-  // ✅ append면 아래 스피너만, 아니면 상단 스피너만
   if (append) isScrollLoading.value = true
   else isLoading.value = true
 
@@ -151,12 +160,17 @@ const fetchUsers = async ({ keyword, nextPage, append }) => {
     const res = await searchUserApi(keyword, nextPage, size.value)
     if (currentId !== requestId) return
 
-    if (res?.success) {
-      const content = res.data.content ?? []
-      hasNext.value = !!res.data.has_next
-      page.value = res.data.page
+    if (res?.data?.success) {
+      // ✅ 실제 데이터는 res.data.data 안에 있음
+      const pageData = res?.data?.data ?? {}
 
-      users.value = append ? [...users.value, ...content] : content
+      console.log(pageData)
+
+      const members = pageData.members ?? []
+      hasNext.value = !!pageData.has_next
+      page.value = pageData.page ?? nextPage
+
+      users.value = append ? [...users.value, ...members] : members
     } else {
       if (!append) users.value = []
       errorMsg.value = res?.error?.message ?? '검색에 실패했어요.'
@@ -167,7 +181,6 @@ const fetchUsers = async ({ keyword, nextPage, append }) => {
     errorMsg.value = '네트워크 오류가 발생했어요.'
     console.error(e)
   } finally {
-    // ✅ append면 아래 스피너만 끄기, 아니면 상단 스피너만 끄기
     if (currentId === requestId) {
       if (append) isScrollLoading.value = false
       else isLoading.value = false
@@ -224,6 +237,20 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+.profile-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #3d444db3;
+  border-radius: 100%;
+
+  svg {
+    color: #3d444db3;
+  }
+}
+
 .travel-main {
   display: flex;
   flex-direction: column;

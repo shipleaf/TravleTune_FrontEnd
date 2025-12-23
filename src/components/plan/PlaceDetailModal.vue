@@ -8,27 +8,43 @@
     <button class="close" @click="$emit('close')" aria-label="close">×</button>
 
     <div class="head">
-      <div class="title">{{ place.name }}</div>
-      <div class="sub">{{ place.category }}</div>
+      <div class="title">
+        {{ detail?.attraction_title ?? place.attraction_title }}
+      </div>
+      <div class="sub">
+        {{ detail?.cat3 ?? place.cat3 }}
+        <span v-if="dayNumber" style="opacity: 0.65; margin-left: 8px">Day {{ dayNumber }}</span>
+      </div>
     </div>
 
     <div class="thumb">
-      <!-- 실제 이미지 연결 전 placeholder -->
-      <div class="thumb__ph">Photo</div>
+      <img
+        v-if="detail?.image_url"
+        :src="detail.image_url"
+        alt="thumb"
+        style="width: 100%; height: 100%; object-fit: cover"
+      />
+      <div v-else class="thumb__ph">Photo</div>
     </div>
 
     <p class="desc">
-      상세 설명이 들어갈 영역입니다. (나중에 API로 place detail 받아서 넣으시면 됩니다.)
+      <span v-if="loading">불러오는 중...</span>
+      <span v-else-if="errorMsg">{{ errorMsg }}</span>
+      <span v-else>{{ detail?.memo ?? '메모가 없습니다.' }}</span>
     </p>
 
     <div class="music">
       <div class="music__label">추천 음악</div>
-      <div class="tracks">
-        <div class="track" v-for="t in mockTracks" :key="t.id">
+
+      <div v-if="loading" class="tracks">로딩중...</div>
+      <div v-else-if="!detail?.music_list?.length" class="tracks">추천 음악이 없습니다.</div>
+
+      <div v-else class="tracks">
+        <div class="track" v-for="t in detail.music_list" :key="t.music_id">
           <div class="album" />
           <div class="tinfo">
             <div class="tname">{{ t.title }}</div>
-            <div class="tartist">{{ t.artist }}</div>
+            <div class="tartist">{{ t.artist_name }}</div>
           </div>
         </div>
       </div>
@@ -41,7 +57,11 @@ import { onMounted, onBeforeUnmount, reactive, watch } from 'vue'
 
 const props = defineProps({
   place: { type: Object, required: true },
-  position: { type: Object, required: true }, // {x,y}
+  detail: { type: Object, default: null }, // ✅ API detail
+  loading: { type: Boolean, default: false }, // ✅
+  errorMsg: { type: String, default: '' }, // ✅
+  dayNumber: { type: Number, default: null }, // ✅ 선택 day
+  position: { type: Object, required: true },
 })
 
 defineEmits(['close', 'mouseenter', 'mouseleave'])
@@ -86,7 +106,10 @@ watch(
 )
 
 const onResize = () => recalc()
-onMounted(() => window.addEventListener('resize', onResize))
+onMounted(() => {
+  window.addEventListener('resize', onResize)
+  console.log(props.place)
+})
 onBeforeUnmount(() => window.removeEventListener('resize', onResize))
 </script>
 
