@@ -17,6 +17,10 @@
           <div class="host-desc">{{ tripDetail.description }}</div>
         </div>
 
+        <div class="image-box">
+          <img :src="tripDetail.image_url" alt="여행지 사진" />
+        </div>
+
         <div class="participants">
           <div class="label">호스트</div>
           <div class="avatars">
@@ -279,7 +283,6 @@ const onDragEnd = () => {
   left: 0;
   right: 0;
 
-  /* ✅ footer(바닥) 기준으로 올라오는 느낌 */
   bottom: 0;
 
   border-top-left-radius: 18px;
@@ -451,6 +454,18 @@ const onDragEnd = () => {
     opacity: 0.75;
     line-height: 1.35;
   }
+}
+
+.image-box {
+  max-width: 100%;
+  margin-bottom: 14px;
+}
+
+.image-box img {
+  display: block; // ⭐ 핵심
+  width: 100%; // ⭐ 핵심
+  height: auto;
+  object-fit: cover;
 }
 
 .day-tabs {

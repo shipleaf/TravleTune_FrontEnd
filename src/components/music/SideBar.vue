@@ -38,16 +38,35 @@
 </template>
 
 <script setup>
+import { fetchDetailCommon2, extractDetailCommon2 } from '@/api/attractions'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import SpotCard from './SpotCard.vue'
 import SiGunguSelectForm from './SiGunguSelectForm.vue'
 import { useSpotStore } from '@/stores/spot'
+import { fetchSpots } from '@/api/attractions'
+
+const mapWithConcurrency = async (arr, limit, mapper) => {
+  const result = new Array(arr.length)
+  let idx = 0
+
+  const workers = Array.from({ length: limit }).map(async () => {
+    while (idx < arr.length) {
+      const cur = idx++
+      result[cur] = await mapper(arr[cur], cur)
+    }
+  })
+
+  await Promise.all(workers)
+  return result
+}
 
 const store = useSpotStore()
 
 const { setSelectedSpot } = store
 
 const keyword = ref('')
+
+const mockSpots = ref([])
 
 // 🔹 모달 열림 상태
 const showRegionModal = ref(false)
@@ -67,104 +86,46 @@ const handleKeydown = (e) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', handleKeydown)
+
+  try {
+    const response = await fetchSpots()
+    const baseSpots = response.data.data.attractions ?? []
+
+    // ✅ contentId 기준으로 TourAPI 상세조회 후 병합
+    const merged = await mapWithConcurrency(baseSpots, 5, async (spot) => {
+      // contentId가 없다면 그대로 반환
+      if (!spot.contentId) {
+        console.log('id 없음')
+        return spot
+      }
+      try {
+        const detailRes = await fetchDetailCommon2(spot.contentId)
+        const detail = extractDetailCommon2(detailRes)
+
+        return {
+          ...spot,
+          addr1: detail.addr1 || spot.addr1,
+          addr2: detail.addr2 || spot.addr2,
+          description: detail.description || spot.description,
+        }
+      } catch (e) {
+        // ✅ 상세 실패해도 리스트는 뜨게
+        return spot
+      }
+    })
+
+    mockSpots.value = merged
+    console.log(mockSpots.value)
+  } catch {
+    return
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
-
-const mockSpots = ref([
-  {
-    attraction_id: 1,
-    title: '경복궁',
-    image:
-      'https://media.istockphoto.com/id/1676101015/ko/%EC%82%AC%EC%A7%84/%EA%B2%BD%EB%B3%B5%EA%B6%81%EC%9D%80-%EC%84%9D%EC%96%91%EC%9D%B4-%EC%95%84%EB%A6%84%EB%8B%B5%EA%B3%A0-%EC%84%9C%EC%9A%B8-%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD.jpg?s=612x612&w=0&k=20&c=gKZvvJAShxWls229xvzBJlCHJMJF9rOJn-yOYn1ACeA=',
-    description:
-      '공주시 원도심에 자리 잡은 가가상점은 공주 지역에서 활동하는 예술가 단체, 화가, 공방들이 기획하고 제작한 로컬 굿즈를 판매하고 있으며, 여행자와 방문자를 위한 추천 도서와 관련 상품들도 판매하고 있다. 굿즈들은 엽서, 스티커, 마스킹테이프, 책갈피, 그립톡 등 다양한 제품이 준비되어 있으며 아기자기한 디자인으로 시간 가는 줄 모르고 구경하게 된다.',
-    addr1: '서울특별시 종로구',
-    addr2: '사직동',
-    latitude: 37.579617,
-    longitude: 126.977041,
-  },
-  {
-    attraction_id: 2,
-    title: '북촌 한옥마을',
-    image:
-      'https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/62a8d636-234e-4903-b4fb-5dd079c7bee3.jpeg',
-    description: '전통 한옥 골목과 감성적인 풍경',
-    addr1: '서울특별시 종로구',
-    addr2: '계동',
-    latitude: 37.582604,
-    longitude: 126.983998,
-  },
-  {
-    attraction_id: 3,
-    title: '해운대 해수욕장',
-    image:
-      'https://i.namu.wiki/i/hkDOgJHC40yiIFKQDRz7YjHpzWrL9vCTT7mve4TF6Lj-GpGsBpvT8WlXbwOT_To1Ndl1zKrVLQ-SiwaGNFOgQA.webp',
-    description: '파도 소리와 야경이 예쁜 부산 대표 해변',
-    addr1: '부산광역시 해운대구',
-    addr2: '우동',
-    latitude: 35.158699,
-    longitude: 129.160384,
-  },
-  {
-    attraction_id: 4,
-    title: '감천문화마을',
-    image:
-      'https://cdn.sanity.io/images/nxpteyfv/goguides/d47e6af783f73cb63ef98a6153f1029064348ebf-1600x1066.jpg',
-    description: '알록달록 벽화와 골목 뷰 맛집',
-    addr1: '부산광역시 사하구',
-    addr2: '감천동',
-    latitude: 35.097263,
-    longitude: 129.010202,
-  },
-  {
-    attraction_id: 5,
-    title: '성산일출봉',
-    image:
-      'https://www.telltrip.com/wp-content/uploads/2025/08/seongsan-ilchulbong-jeju-unesco3.webp',
-    description: '일출로 유명한 제주 대표 자연 명소',
-    addr1: '제주특별자치도 서귀포시',
-    addr2: '성산읍',
-    latitude: 33.458889,
-    longitude: 126.9425,
-  },
-  {
-    attraction_id: 6,
-    title: '안동 하회마을',
-    image: 'https://cdn.ardentnews.co.kr/news/photo/202506/6639_31472_5340.jpg',
-    description: '한국적인 정취가 살아있는 전통 마을',
-    addr1: '경상북도 안동시',
-    addr2: '풍천면',
-    latitude: 36.538611,
-    longitude: 128.518333,
-  },
-  {
-    attraction_id: 7,
-    title: '경주 불국사',
-    image:
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHh7SfRmRY-QnIhGSAUooX6TTLVBw23IApEQ&s',
-    description: '천년 고도 경주의 대표 사찰',
-    addr1: '경상북도 경주시',
-    addr2: '진현동',
-    latitude: 35.79,
-    longitude: 129.3316,
-  },
-  {
-    attraction_id: 8,
-    title: '남이섬',
-    image:
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqW0IT7Zat4O4TgoH9Hgv-rk2Z_BH39VYmxw&s',
-    description: '사계절 내내 산책하기 좋은 섬',
-    addr1: '강원특별자치도 춘천시',
-    addr2: '남산면',
-    latitude: 37.7917,
-    longitude: 127.525,
-  },
-])
 
 const handleSelectSpot = (spot) => {
   setSelectedSpot(spot)
@@ -188,7 +149,6 @@ const handleSelectSpot = (spot) => {
 
 .sidebar-inner {
   overflow-x: visible;
-
   display: flex;
   flex-direction: column;
   padding: 24px;

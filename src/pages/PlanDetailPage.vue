@@ -1,7 +1,8 @@
 <template>
   <div class="page">
-    <HeaderBar />
-
+    <div class="page-header">
+      <HeaderBar />
+    </div>
     <div class="map-attractions-container">
       <div class="sidebar">
         <TripDetailSidebar
@@ -99,6 +100,11 @@ watch(
 .panel__header {
   padding: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.page-header {
+  padding-top: 16px;
+  width: 100%;
 }
 
 .search {

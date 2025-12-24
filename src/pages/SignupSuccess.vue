@@ -42,8 +42,8 @@ onBeforeUnmount(() => {
   clearTimeout(t2)
 })
 
-const goMain = () => router.push('/')
-const skip = () => router.push('/')
+const goMain = () => router.push('/login')
+const skip = () => router.push('/login')
 </script>
 
 <style lang="scss" scoped>

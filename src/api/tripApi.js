@@ -44,6 +44,7 @@ export const getTripsMock = () => {
         title: '부산 먹방 여행',
         start_date: '2025-05-01',
         end_date: '2025-05-03',
+        image_url: 'https://cdn.epnc.co.kr/news/photo/202001/93682_85075_3859.jpg',
         trip_members: [
           {
             member_id: 1,
@@ -66,6 +67,8 @@ export const getTripsMock = () => {
         title: '서울 감성 산책',
         start_date: '2025-06-10',
         end_date: '2025-06-12',
+        image_url:
+          'https://www.news1.kr/_next/image?url=https%3A%2F%2Fi3n.news1.kr%2Fsystem%2Fphotos%2F2022%2F12%2F16%2F5742000%2Fhigh.jpg&w=1920&q=75',
         trip_members: [
           {
             member_id: 3,
@@ -82,6 +85,8 @@ export const getTripsMock = () => {
         title: '제주 힐링 여행',
         start_date: '2025-07-01',
         end_date: '2025-07-05',
+        image_url:
+          'https://image.imnews.imbc.com/news/2024/society/article/__icsFiles/afieldfile/2024/08/14/h2024081403.jpg',
         trip_members: [
           {
             member_id: 4,
@@ -110,6 +115,8 @@ export const getTripsMock = () => {
         title: '속초 바다 여행',
         start_date: '2025-08-15',
         end_date: '2025-08-17',
+        image_url:
+          'https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/63f989a4-4f67-4578-96cd-97d591686dfe.jpeg',
         trip_members: [
           {
             member_id: 7,
@@ -126,6 +133,7 @@ export const getTripsMock = () => {
         title: '새해 제주 드라이브',
         start_date: '2026-01-10',
         end_date: '2026-01-12',
+        image_url: 'https://www.telltrip.com/wp-content/uploads/2024/12/2053_11057_1848.jpg',
         trip_members: [
           {
             member_id: 10,
@@ -148,6 +156,8 @@ export const getTripsMock = () => {
         title: '전시회 + 카페 투어',
         start_date: '2026-02-08',
         end_date: '2026-02-09',
+        image_url:
+          'https://youthpress.net/xe/files/attach/images/9796/938/617/710e234e2f0f18d4d8dcbfffde09682e.jpg',
         trip_members: [
           {
             member_id: 12,
@@ -176,6 +186,8 @@ export const getTripsMock = () => {
         title: '강릉 커피 + 바다',
         start_date: '2026-03-20',
         end_date: '2026-03-22',
+        image_url:
+          'https://content.r9cdn.net/rimg/dimg/dd/9b/08a1e3aa-lm-238469-17231868440.jpg?width=1200&height=630&xhint=4000&yhint=2225&crop=true',
         trip_members: [
           {
             member_id: 15,
@@ -192,6 +204,8 @@ export const getTripsMock = () => {
         title: '광안리 야경 여행',
         start_date: '2026-05-03',
         end_date: '2026-05-05',
+        image_url:
+          'https://a.travel-assets.com/findyours-php/viewfinder/images/res70/246000/246971-Gwangalli-Beach.jpg',
         trip_members: [
           {
             member_id: 16,

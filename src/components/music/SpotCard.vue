@@ -14,7 +14,7 @@
       <div class="spot-card-addr">{{ spot.addr1 }} {{ spot.addr2 }}</div>
     </div>
     <div class="spot-card-image-wrapper">
-      <img class="spot-card-image" :src="spot.image || '/placeholder.svg'" :alt="spot" />
+      <img class="spot-card-image" :src="spot.image_url || '/placeholder.svg'" :alt="spot" />
     </div>
     <Transition name="active-bar">
       <div v-if="isActive" class="spot-card-active-bar"></div>
@@ -53,7 +53,7 @@ const isActive = computed(
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  border-top: 1px solid oklch(0.65 0.02 240);
+  /* border-top: 1px solid oklch(0.65 0.02 240); */
   background: color-mix(in oklch, var(--card) 80%, transparent);
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.5);
