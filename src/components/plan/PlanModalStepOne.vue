@@ -90,7 +90,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .page {
   width: 100%;
-  height: 540px;
+  height: 600px;
   color: black;
 
   display: flex;

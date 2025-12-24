@@ -13,14 +13,43 @@
           placeholder="여행 제목을 입력해 주세요."
         />
       </div>
+      <div class="travel-detail-row">
+        <div class="travel-photo">
+          <label class="travel-photo-label">사진</label>
 
-      <div class="travel-description">
-        <label for="trip-desc">설명</label>
-        <textarea
-          v-model="tripDescription"
-          id="trip-desc"
-          placeholder="여행에 대한 설명을 입력해 주세요."
-        />
+          <input
+            ref="photoInputRef"
+            class="travel-photo-input"
+            type="file"
+            accept="image/*"
+            @change="onPickPhoto"
+          />
+
+          <button type="button" class="travel-photo-box" @click="openPhotoPicker">
+            <img
+              v-if="photoPreviewUrl"
+              :src="photoPreviewUrl"
+              alt="preview"
+              class="travel-photo-preview"
+            />
+
+            <div v-else class="travel-photo-empty">
+              <span class="plus">＋</span>
+              <span class="hint">클릭해서 사진 추가</span>
+            </div>
+
+            <span v-if="photoPreviewUrl" class="travel-photo-change">변경</span>
+          </button>
+        </div>
+
+        <div class="travel-description">
+          <label for="trip-desc">설명</label>
+          <textarea
+            v-model="tripDescription"
+            id="trip-desc"
+            placeholder="여행에 대한 설명을 입력해 주세요."
+          />
+        </div>
       </div>
     </div>
     <div class="user-invite-container">
@@ -107,32 +136,36 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import LoadSpinner from '../common/LoadSpinner.vue'
 import { useTripStore } from '@/stores/trip'
-
-// import { mockSearchUser as searchUserApi } from '@/api/friendApi'
 import { storeToRefs } from 'pinia'
 import { searchUser as searchUserApi } from '@/api/friendApi'
 import { User } from 'lucide-vue-next'
 
 const store = useTripStore()
-
 const { tripTitle, tripDescription, invitedUsers } = storeToRefs(store)
 
-const inputUser = ref('')
+const photoInputRef = ref(null)
+const photoPreviewUrl = ref('')
+const photoFile = ref(null)
 
-const users = ref([])
-const isLoading = ref(false)
-const isScrollLoading = ref(false)
-const errorMsg = ref('')
-
-const page = ref(0)
-const size = ref(5)
-const hasNext = ref(false)
-
-const resultRef = ref(null)
-
-const isInvited = (memberId) => {
-  return invitedUsers.value.some((u) => u.member_id === memberId)
+const openPhotoPicker = () => {
+  photoInputRef.value?.click()
 }
+
+const onPickPhoto = (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  photoFile.value = file
+  if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
+  photoPreviewUrl.value = URL.createObjectURL(file)
+}
+
+onBeforeUnmount(() => {
+  if (photoPreviewUrl.value) URL.revokeObjectURL(photoPreviewUrl.value)
+})
+// ------------------------------------------------------
+
+// -------------------- 초대 로직 --------------------
+const isInvited = (memberId) => invitedUsers.value.some((u) => u.member_id === memberId)
 
 const toggleInvite = (user) => {
   const idx = invitedUsers.value.findIndex((u) => u.member_id === user.member_id)
@@ -143,12 +176,36 @@ const toggleInvite = (user) => {
 const removeInvite = (memberId) => {
   invitedUsers.value = invitedUsers.value.filter((u) => u.member_id !== memberId)
 }
+// ------------------------------------------------------
+
+// -------------------- 검색/무한스크롤 (cursor 기반) --------------------
+const inputUser = ref('')
+const users = ref([])
+const isLoading = ref(false)
+const isScrollLoading = ref(false)
+const errorMsg = ref('')
+
+const size = ref(5)
+
+// ✅ cursor 기반 상태
+const cursor = ref(0) // 첫 요청 cursor (백엔드 규약에 맞게 0 또는 50 등)
+const nextCursor = ref(null) // 응답에서 받은 next_cursor
+const hasNext = ref(false)
+const currentKeyword = ref('')
+
+const resultRef = ref(null)
 
 let debounceTimer = null
 let requestId = 0
-const currentKeyword = ref('') // ✅ “현재 검색어” 고정용
 
-const fetchUsers = async ({ keyword, nextPage, append }) => {
+const resetSearchState = () => {
+  users.value = []
+  errorMsg.value = ''
+  cursor.value = 0
+  nextCursor.value = null
+  hasNext.value = false
+}
+const fetchUsers = async ({ keyword, cursorValue, append }) => {
   const currentId = ++requestId
 
   if (append) isScrollLoading.value = true
@@ -157,23 +214,20 @@ const fetchUsers = async ({ keyword, nextPage, append }) => {
   errorMsg.value = ''
 
   try {
-    const res = await searchUserApi(keyword, nextPage, size.value)
+    const res = await searchUserApi(keyword, cursorValue, size.value)
     if (currentId !== requestId) return
 
     if (res?.data?.success) {
-      // ✅ 실제 데이터는 res.data.data 안에 있음
       const pageData = res?.data?.data ?? {}
-
-      console.log(pageData)
 
       const members = pageData.members ?? []
       hasNext.value = !!pageData.has_next
-      page.value = pageData.page ?? nextPage
+      nextCursor.value = pageData.next_cursor ?? null
 
       users.value = append ? [...users.value, ...members] : members
     } else {
       if (!append) users.value = []
-      errorMsg.value = res?.error?.message ?? '검색에 실패했어요.'
+      errorMsg.value = res?.data?.error?.message ?? '검색에 실패했어요.'
     }
   } catch (e) {
     if (currentId !== requestId) return
@@ -195,19 +249,16 @@ watch(inputUser, (newV) => {
   const keyword = newV.trim()
 
   if (!keyword) {
-    users.value = []
-    isLoading.value = false
-    errorMsg.value = ''
-    page.value = 0
-    hasNext.value = false
     currentKeyword.value = ''
+    resetSearchState()
+    isLoading.value = false
     return
   }
 
   debounceTimer = setTimeout(async () => {
     currentKeyword.value = keyword
-    page.value = 0
-    await fetchUsers({ keyword, nextPage: 0, append: false })
+    resetSearchState()
+    await fetchUsers({ keyword, cursorValue: 0, append: false })
   }, 300)
 })
 
@@ -219,6 +270,7 @@ const onScrollResult = async () => {
   if (isScrollLoading.value) return
   if (!hasNext.value) return
   if (!currentKeyword.value) return
+  if (nextCursor.value == null) return
 
   const threshold = 24
   const reachedBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold
@@ -226,7 +278,7 @@ const onScrollResult = async () => {
 
   await fetchUsers({
     keyword: currentKeyword.value,
-    nextPage: page.value + 1,
+    cursorValue: nextCursor.value,
     append: true,
   })
 }
@@ -255,6 +307,94 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.travel-detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr; // 왼쪽(사진) : 오른쪽(설명) 비율
+  gap: 16px;
+  align-items: start;
+}
+
+.travel-photo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.travel-photo-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.travel-photo-input {
+  display: none;
+}
+
+.travel-photo-box {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border: 1px dashed #d1d9e0;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+}
+
+.travel-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.travel-photo-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+
+  .plus {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .hint {
+    font-size: 0.85rem;
+  }
+}
+
+.travel-photo-change {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #d1d9e0;
+  color: #374151;
 }
 
 /* 공통 input / textarea 스타일 */
@@ -304,7 +444,7 @@ onBeforeUnmount(() => {
 
 .page {
   width: 100%;
-  height: 540px;
+  height: 600px;
   min-height: 0;
   color: black;
 
@@ -385,6 +525,7 @@ onBeforeUnmount(() => {
   z-index: 99;
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .find-mates-piece {

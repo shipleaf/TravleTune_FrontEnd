@@ -6,6 +6,7 @@ export const useTripStore = defineStore('trip', {
     selectedGungu: null,
     tripTitle: '',
     tripDescription: '',
+    image_url: '',
     invitedUsers: [],
   }),
   actions: {
@@ -14,6 +15,7 @@ export const useTripStore = defineStore('trip', {
       this.selectedGungu = null
       this.tripTitle = ''
       this.tripDescription = ''
+      this.image_url = ''
       this.invitedUsers = []
     },
   },

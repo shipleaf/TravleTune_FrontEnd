@@ -1,7 +1,6 @@
 import axiosApi from './axiosApi'
 import axios from 'axios'
 
-// src/api/mockSpotsApi.js
 export function fetchMockSpots() {
   const response = {
     data: {

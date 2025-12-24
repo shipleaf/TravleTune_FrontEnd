@@ -46,6 +46,9 @@
       <section class="modal-container-body rtf">
         <Transition name="slide-left" mode="out-in">
           <div class="step-wrapper" :key="createModalStep">
+            <div class="select-region-header" v-if="createModalStep === 1">
+              <h3>날짜를 선택해 주세요.</h3>
+            </div>
             <VDatePicker
               v-if="createModalStep === 1"
               v-model.range="range"
@@ -130,10 +133,12 @@ import PlanModalStepOne from './PlanModalStepOne.vue'
 import PlanModalStepTwo from './PlanModalStepTwo.vue'
 import { useTripStore } from '@/stores/trip'
 import { storeToRefs } from 'pinia'
+import { createTrip as createTripApi } from '@/api/tripApi'
 
 const store = useTripStore()
 
-const { selectedSido, selectedGungu, tripTitle, tripDescription, invitedUsers } = storeToRefs(store)
+const { selectedSido, selectedGungu, tripTitle, tripDescription, invitedUsers, image_url } =
+  storeToRefs(store)
 
 const range = ref({
   start: '',
@@ -198,33 +203,54 @@ const close = () => {
   range.value = { start: '', end: '' }
 }
 
+const formatDate = (v) => {
+  if (!v) return ''
+  if (typeof v === 'string') return v // 이미 "2025-05-01" 형태면 그대로
+  const d = new Date(v)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 const createTrip = async () => {
   if (!canGoNext.value) return
 
   const data = {
-    title: tripTitle.value,
-    start_date: range.value.start,
-    end_date: range.value.end,
-    sido_code: selectedSido.value,
-    gungu_code: selectedGungu.value,
-    description: tripDescription.value,
+    title: tripTitle.value?.trim(),
+    start_date: formatDate(range.value.start),
+    end_date: formatDate(range.value.end),
+    sido_code: Number(selectedSido.value),
+    gungu_code: selectedGungu.value ? Number(selectedGungu.value) : null,
+    description: tripDescription.value?.trim(),
+    image_url: image_url.value || null, // base64 (data:image/... 포함)
   }
 
   try {
-    console.log(data)
-    // const res = await createTrip(data)
-    // const tripId = res.data.trip_id
-    // TODO: 여행 생성
+    const res = await createTripApi(data)
+
+    // 예: 생성 성공 후 trip_id가 온다고 가정
+    // const tripId = res?.data?.data?.trip_id
+
+    // 초대 멤버 처리(별도 API가 있다면 여기서)
+    console.log('createTrip success:', res?.data)
+
+    // 모달 닫기 + 초기화
+    close()
   } catch (error) {
-    console.error(error)
+    console.error('createTrip failed:', error)
   }
-  console.log(invitedUsers.value)
 }
 </script>
 
 <style lang="scss" scoped>
 .modal-container-body :deep(.vc-header button) {
   background: none;
+}
+
+.select-region-header {
+  color: black;
+  flex: 0 0 auto;
 }
 
 .modal {
@@ -246,7 +272,7 @@ const createTrip = async () => {
   position: relative;
   z-index: 1;
 
-  min-height: 600px;
+  min-height: 700px;
   width: 500px;
   margin-left: auto;
   margin-right: auto;
@@ -276,6 +302,7 @@ const createTrip = async () => {
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  height: 900px;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
