@@ -3,7 +3,7 @@
   <main v-if="selectedSpot" class="map-area">
     <img
       class="map-spot-image"
-      :src="selectedSpot.image || '/placeholder.svg'"
+      :src="selectedSpot.image_url || '/placeholder.svg'"
       :alt="selectedSpot.name"
     />
     <div class="map-spot-overlay"></div>

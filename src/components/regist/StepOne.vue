@@ -178,7 +178,7 @@ $muted: rgba(255, 255, 255, 0.68);
   min-height: 100vh;
   width: 100vw;
   display: flex;
-  background: #000; // 검은 배경 전제
+  background: oklch(0.12 0.01 240); // 검은 배경 전제
 }
 
 .right {
@@ -187,7 +187,7 @@ $muted: rgba(255, 255, 255, 0.68);
   align-items: center;
   justify-content: center;
   padding: 32px;
-  background: #000;
+  background: oklch(0.12 0.01 240);
 }
 
 .card {

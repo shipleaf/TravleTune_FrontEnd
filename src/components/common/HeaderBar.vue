@@ -5,7 +5,7 @@
         <div class="logo-container">
           <LpSpinner />
         </div>
-        <span class="app-logo-text">TravelTunes</span>
+        <span class="app-logo-text">TravelTune</span>
       </div>
 
       <div class="container">
@@ -68,7 +68,7 @@
           </span>
         </button>
         <Transition name="dropdown" appear>
-          <div class="card" v-if="isCardOpen" @click.stop>
+          <div class="card" v-show="isCardOpen" @click.stop>
             <div class="profile-row">
               <div class="app-header-avatar">
                 <img
@@ -505,23 +505,89 @@ background-image: linear-gradient(135deg, rgba(36, 40, 50, 1) 0%, rgba(36, 40, 5
 }
 
 .app-header {
-  position: relative;
-  width: 100%;
-  height: 64px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in oklch, var(--card) 70%, transparent);
-  backdrop-filter: blur(16px);
+  top: 16px;
+  left: 16px;
+  right: 16px;
   z-index: 1000;
+
+  width: 80%;
+  margin: 0 auto;
+
+  height: 80px;
+
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  overflow: visible;
+
+  border: 1px solid rgba(59, 130, 246, 0.3);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  animation: headerBorderCycle 4s linear infinite;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  clip-path: inset(0 round 16px);
+  /* glow 효과 */
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+
+  animation: headerGlowCycle 4s linear infinite;
 }
 
 .app-header-inner {
+  position: relative;
+  z-index: 1;
+
   width: 100%;
   height: 100%;
   margin: 0 auto;
   padding: 0 24px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr; /* 좌 / 중앙 / 우 */
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
+}
+
+@keyframes headerBorderCycle {
+  0% {
+    border-color: rgba(59, 130, 246, 0.3);
+  } /* blue */
+  25% {
+    border-color: rgba(147, 51, 234, 0.3);
+  } /* purple */
+  50% {
+    border-color: rgba(236, 72, 153, 0.3);
+  } /* pink */
+  75% {
+    border-color: rgba(34, 197, 94, 0.3);
+  } /* green */
+  100% {
+    border-color: rgba(59, 130, 246, 0.3);
+  } /* blue */
+}
+
+@keyframes headerGlowCycle {
+  0% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+  25% {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+  }
+  75% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
 }
 
 .app-header-left {

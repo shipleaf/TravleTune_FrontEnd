@@ -1,7 +1,8 @@
 ﻿<template>
   <div class="app-page">
-    <HeaderBar />
-
+    <div class="page-header">
+      <HeaderBar />
+    </div>
     <div class="app-main">
       <div class="page-info">
         <div class="page-title">음악 추천</div>
@@ -66,6 +67,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.page-header {
+  padding-top: 16px;
+  width: 100%;
+}
 .app-page {
   width: 100%;
   height: 100vh;
@@ -76,7 +81,8 @@ onBeforeUnmount(() => {
 
 .app-main {
   width: 100%;
-  padding: 0 15%;
+  height: calc(100% - 96px);
+  padding: 1% 15% 1%;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -91,6 +97,8 @@ onBeforeUnmount(() => {
 }
 
 .contents {
+  width: 100%;
+  height: 100%;
   display: flex;
 }
 

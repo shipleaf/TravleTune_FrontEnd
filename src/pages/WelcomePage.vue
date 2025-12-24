@@ -5,101 +5,101 @@
     </div>
 
     <main class="main-container">
-      <div class="left">
-        <div class="firework-container">
-          <!-- <FireWorks /> -->
-        </div>
-        <div class="right-overlay" aria-hidden="true"></div>
-        <!-- <ShootingStars class="bg" :count="40" /> -->
-        <AttractionRecommendations />
-      </div>
-
-      <!--TODO: 컨테이너 아래로 내려가면서 음악 추천-->
       <section class="content-container">
-        <div class="mood-card">
-          <div class="prompt">
-            <label class="prompt__label">무드 입력</label>
-            <span class="prompt__desc"> 사진과 문장으로 어울리는 음악을 추천해요 </span>
-            <div class="prompt__col">
-              <div class="prompt__row">
-                <div class="file-upload-form">
-                  <label for="file" class="file-upload-label">
-                    <div
-                      class="file-upload-design"
-                      @dragenter.prevent="onDragEnter"
-                      @dragover.prevent="onDragOver"
-                      @dragleave.prevent="onDragLeave"
-                      @drop.prevent="onDrop"
-                      @click="openFileDialog"
-                    >
-                      <template v-if="previewUrl">
-                        <img :src="previewUrl" alt="preview" class="preview preview--compact" />
-                        <div class="preview-actions" @click.stop>
-                          <button class="chip" type="button" @click="openFileDialog">바꾸기</button>
-                          <button class="chip chip--danger" type="button" @click="clearImage">
-                            삭제
-                          </button>
+        <div class="prompt-container">
+          <div class="content-1">
+            <div class="mood-card">
+              <div class="prompt">
+                <label class="prompt__label">무드 입력</label>
+                <span class="prompt__desc"> 사진과 문장으로 어울리는 음악을 추천해요 </span>
+                <div class="prompt__col">
+                  <div class="prompt__row">
+                    <div class="file-upload-form">
+                      <label for="file" class="file-upload-label">
+                        <div
+                          class="file-upload-design"
+                          @dragenter.prevent="onDragEnter"
+                          @dragover.prevent="onDragOver"
+                          @dragleave.prevent="onDragLeave"
+                          @drop.prevent="onDrop"
+                          @click="openFileDialog"
+                        >
+                          <template v-if="previewUrl">
+                            <img :src="previewUrl" alt="preview" class="preview preview--compact" />
+                            <div class="preview-actions" @click.stop>
+                              <button class="chip" type="button" @click="openFileDialog">
+                                바꾸기
+                              </button>
+                              <button class="chip chip--danger" type="button" @click="clearImage">
+                                삭제
+                              </button>
+                            </div>
+                          </template>
+                          <template v-else>
+                            <ImageUp class="upload-area" />
+                            <span class="upload-area">이미지를 드래그하거나 클릭해 주세요</span>
+                          </template>
                         </div>
-                      </template>
-                      <template v-else>
-                        <ImageUp class="upload-area" />
-                        <span class="upload-area">이미지를 드래그하거나 클릭해 주세요</span>
-                      </template>
+                        <input
+                          ref="fileInputRef"
+                          class="file-input"
+                          type="file"
+                          accept="image/*"
+                          @change="onFileChange"
+                          :class="{ 'has-preview': !!previewUrl }"
+                        />
+                      </label>
                     </div>
-                    <input
-                      ref="fileInputRef"
-                      class="file-input"
-                      type="file"
-                      accept="image/*"
-                      @change="onFileChange"
-                      :class="{ 'has-preview': !!previewUrl }"
-                    />
-                  </label>
-                </div>
 
-                <textarea
-                  ref="textareaRef"
-                  v-model="prompt"
-                  class="prompt__input"
-                  placeholder="예) 여행 중 찍은 사진이에요, 잔잔하고 감성적인 노래로 추천해 주세요."
-                  @input="autoGrow"
-                  @keydown.enter.exact.prevent="submit"
-                />
-              </div>
-              <div class="prompt-footer">
-                <p class="prompt__helper">팁: 업로드 한 사진의 분위기나 감정을 적어보세요</p>
-                <div class="prompt-footer-right">
-                  <div class="ai-version">GPT-4.0-mini</div>
-                  <button type="button" class="send-button" :disabled="!canSubmit" @click="submit">
-                    <SendHorizontal size="18" />
-                  </button>
+                    <textarea
+                      ref="textareaRef"
+                      v-model="prompt"
+                      class="prompt__input"
+                      placeholder="예) 여행 중 찍은 사진이에요, 잔잔하고 감성적인 노래로 추천해 주세요."
+                      @input="autoGrow"
+                      @keydown.enter.exact.prevent="submit"
+                    />
+                  </div>
+                  <div class="prompt-footer">
+                    <p class="prompt__helper">팁: 업로드 한 사진의 분위기나 감정을 적어보세요</p>
+                    <div class="prompt-footer-right">
+                      <div class="ai-version">GPT-4.0-mini</div>
+                      <button
+                        type="button"
+                        class="send-button"
+                        :disabled="!canSubmit"
+                        @click="submit"
+                      >
+                        <SendHorizontal size="18" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+            <div class="prompt">
+              <label class="prompt__label">다가오는 일정</label>
+              <span class="prompt__desc"> 사진과 문장으로 어울리는 음악을 추천해요 </span>
+              <UpcomingPlan />
+            </div>
+          </div>
+          <div class="friend-container">
+            <FriendList />
           </div>
         </div>
-        <TrendAttractions />
+        <GeolocationAttractions />
       </section>
-
-      <div class="right">
-        <div class="firework-container">
-          <!-- <FireWorks /> -->
-        </div>
-        <div class="right-overlay" aria-hidden="true"></div>
-        <!-- <ShootingStars class="bg" :count="40" /> -->
-        <div class="friend-container">
-          <FriendList />
-        </div>
-      </div>
     </main>
+    <div class="player-container">
+      <MusicPlayer />
+    </div>
   </div>
 </template>
 
 <script setup>
-import AttractionRecommendations from '@/components/main/AttractionRecommendations.vue'
-import ShootingStars from '@/components/main/ShootingStars.vue'
-import FireWorks from '@/components/main/FireWorks.vue'
-import TrendAttractions from '@/components/main/UpcomingAttractions.vue'
+import UpcomingPlan from '@/components/main/UpcomingPlan.vue'
+import MusicPlayer from '@/components/main/MusicPlayer.vue'
+import GeolocationAttractions from '@/components/main/GeolocationAttractions.vue'
 import FriendList from '@/components/main/FriendList.vue'
 import { ref, computed, onBeforeUnmount, nextTick, onMounted } from 'vue'
 import HeaderBar from '@/components/common/HeaderBar.vue'
@@ -187,10 +187,16 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
-.firework-container {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+.prompt-container {
+  width: 100%;
+  padding: 0 20%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.page-header {
+  padding-top: 16px;
+  width: 100%;
 }
 
 /* ✅ 검은 블러 막 (불꽃 위, 컨텐츠 아래) */
@@ -213,7 +219,18 @@ onBeforeUnmount(() => {
 
   pointer-events: none; // ✅ 클릭 방해 금지
 }
+
+.player-container {
+  width: 210px;
+  height: 400px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  transform: translate(-50%, -10%);
+}
+
 .page {
+  position: relative;
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -226,19 +243,7 @@ onBeforeUnmount(() => {
   flex: 1;
 }
 
-.left,
-.right {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 25%;
-}
-
 .friend-container {
-  position: absolute;
-  inset: 0;
-  left: 12px;
-  top: 32px;
   z-index: 3;
 }
 
@@ -453,6 +458,13 @@ onBeforeUnmount(() => {
   background-color: inherit;
   padding: 12px 12px 12px 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.content-1 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
 }
 
 .prompt__helper {

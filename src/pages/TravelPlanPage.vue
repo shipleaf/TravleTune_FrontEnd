@@ -1,6 +1,8 @@
 ﻿<template>
   <div class="app-page">
-    <HeaderBar />
+    <div class="page-header">
+      <HeaderBar />
+    </div>
     <div class="app-main">
       <div class="page-info">
         <div class="page-title">내 여행</div>
@@ -20,6 +22,11 @@ import TravelPlanning from '@/components/plan/TravelPlanning.vue'
 </script>
 
 <style lang="scss" scoped>
+.page-header {
+  padding-top: 16px;
+  width: 100%;
+}
+
 .app-page {
   width: 100%;
   height: 100vh;
