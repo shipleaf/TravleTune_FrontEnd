@@ -1,25 +1,33 @@
 <template>
   <aside class="sidebar">
     <div class="sidebar-inner">
-      <!-- 검색 영역 -->
       <div class="sidebar-search">
         <div class="sidebar-search-input-wrapper">
           <input
             v-model="keyword"
             type="text"
             class="sidebar-search-input"
-            placeholder="떠나고 싶은 관광지를 입력해 주세요"
+            placeholder="가보고 싶은 관광지를 입력해주세요"
           />
-          <button class="setting-btn" type="button" @click="openRegionModal">
+          <button ref="filterButtonRef" class="setting-btn" type="button" @click="openRegionModal">
             <span class="bar bar1"></span>
             <span class="bar bar2"></span>
             <span class="bar bar1"></span>
           </button>
+          <Teleport to="body">
+            <div
+              v-if="showRegionModal"
+              class="region-overlay"
+              :style="regionModalStyle"
+              @click.self="closeRegionModal"
+            >
+              <SiGunguSelectForm @close="closeRegionModal" @apply="handleApplyFilters" />
+            </div>
+          </Teleport>
         </div>
       </div>
 
-      <!-- 검색 결과 리스트 -->
-      <div class="sidebar-list">
+      <div class="sidebar-list" ref="listRef" @scroll="handleListScroll">
         <SpotCard
           v-for="spot in mockSpots"
           :key="spot.attraction_id"
@@ -29,49 +37,52 @@
       </div>
     </div>
   </aside>
-
-  <Teleport to="body">
-    <div v-if="showRegionModal" class="region-overlay" @click.self="closeRegionModal">
-      <SiGunguSelectForm @close="closeRegionModal" />
-    </div>
-  </Teleport>
 </template>
 
 <script setup>
-import { fetchDetailCommon2, extractDetailCommon2 } from '@/api/attractions'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue'
 import SpotCard from './SpotCard.vue'
 import SiGunguSelectForm from './SiGunguSelectForm.vue'
 import { useSpotStore } from '@/stores/spot'
+import { useFilterStore } from '@/stores/filter'
 import { fetchSpots } from '@/api/attractions'
-
-const mapWithConcurrency = async (arr, limit, mapper) => {
-  const result = new Array(arr.length)
-  let idx = 0
-
-  const workers = Array.from({ length: limit }).map(async () => {
-    while (idx < arr.length) {
-      const cur = idx++
-      result[cur] = await mapper(arr[cur], cur)
-    }
-  })
-
-  await Promise.all(workers)
-  return result
-}
+import { storeToRefs } from 'pinia'
 
 const store = useSpotStore()
+const filterStore = useFilterStore()
 
-const { setSelectedSpot } = store
-
-const keyword = ref('')
+const { setSelectedSpot, setSpots } = store
+const { keyword, sido_code, gungu_code, content_type } = storeToRefs(filterStore)
 
 const mockSpots = ref([])
+const cursor = ref(null)
+const hasNext = ref(true)
+const isLoading = ref(false)
+const listRef = ref(null)
+let keywordTimer = null
 
-// 🔹 모달 열림 상태
 const showRegionModal = ref(false)
+const filterButtonRef = ref(null)
+const modalPosition = ref({ top: 0, left: 0 })
 
-const openRegionModal = () => {
+const updateModalPosition = () => {
+  if (!filterButtonRef.value) return
+
+  const rect = filterButtonRef.value.getBoundingClientRect()
+  modalPosition.value = {
+    top: rect.top + window.scrollY,
+    left: rect.right + 8 + window.scrollX,
+  }
+}
+
+const regionModalStyle = computed(() => ({
+  top: `${modalPosition.value.top}px`,
+  left: `${modalPosition.value.left}px`,
+}))
+
+const openRegionModal = async () => {
+  await nextTick()
+  updateModalPosition()
   showRegionModal.value = true
 }
 
@@ -79,53 +90,96 @@ const closeRegionModal = () => {
   showRegionModal.value = false
 }
 
-// 🔹 ESC 키로 닫기
 const handleKeydown = (e) => {
   if (e.key === 'Escape' && showRegionModal.value) {
     closeRegionModal()
   }
 }
 
-onMounted(async () => {
-  window.addEventListener('keydown', handleKeydown)
+const handleWindowChange = () => {
+  if (showRegionModal.value) {
+    updateModalPosition()
+  }
+}
+
+const buildFilterParams = (extra = {}) => {
+  const params = { size: 10, ...extra }
+
+  if (sido_code.value) params.sidoCode = sido_code.value
+  if (gungu_code.value) params.gunguCode = gungu_code.value
+  if (content_type.value && content_type.value !== 'all') params.contentType = content_type.value
+  if (keyword.value && keyword.value.trim()) params.title = keyword.value.trim()
+
+  return params
+}
+
+const fetchAndSetSpots = async ({ reset = false } = {}) => {
+  if (isLoading.value) return
+  if (!hasNext.value && !reset) return
+
+  isLoading.value = true
+
+  if (reset) {
+    cursor.value = null
+    hasNext.value = true
+    mockSpots.value = []
+  }
 
   try {
-    const response = await fetchSpots()
-    const baseSpots = response.data.data.attractions ?? []
+    const response = await fetchSpots(buildFilterParams({ cursor: cursor.value }))
+    const data = response?.data?.data ?? {}
+    const attractions = data.attractions ?? []
 
-    // ✅ contentId 기준으로 TourAPI 상세조회 후 병합
-    const merged = await mapWithConcurrency(baseSpots, 5, async (spot) => {
-      // contentId가 없다면 그대로 반환
-      if (!spot.contentId) {
-        console.log('id 없음')
-        return spot
-      }
-      try {
-        const detailRes = await fetchDetailCommon2(spot.contentId)
-        const detail = extractDetailCommon2(detailRes)
-
-        return {
-          ...spot,
-          addr1: detail.addr1 || spot.addr1,
-          addr2: detail.addr2 || spot.addr2,
-          description: detail.description || spot.description,
-        }
-      } catch (e) {
-        // ✅ 상세 실패해도 리스트는 뜨게
-        return spot
-      }
-    })
-
-    mockSpots.value = merged
-    console.log(mockSpots.value)
-  } catch {
-    return
+    mockSpots.value = reset ? attractions : [...mockSpots.value, ...attractions]
+    setSpots(mockSpots.value)
+    cursor.value = data.next_cursor ?? null
+    hasNext.value = Boolean(data.has_next)
+  } catch (e) {
+    hasNext.value = false
+  } finally {
+    isLoading.value = false
   }
+}
+
+const handleApplyFilters = () => {
+  closeRegionModal()
+  fetchAndSetSpots({ reset: true })
+}
+
+const handleKeywordChange = () => {
+  if (keywordTimer) clearTimeout(keywordTimer)
+  keywordTimer = setTimeout(() => {
+    fetchAndSetSpots({ reset: true })
+  }, 400)
+}
+
+const handleListScroll = () => {
+  const el = listRef.value
+  if (!el || isLoading.value || !hasNext.value) return
+
+  const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 50
+  if (nearBottom) {
+    fetchAndSetSpots()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', handleWindowChange)
+  window.addEventListener('scroll', handleWindowChange, true)
+
+  fetchAndSetSpots({ reset: true })
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', handleWindowChange)
+  window.removeEventListener('scroll', handleWindowChange, true)
+  filterStore.$reset()
+  if (keywordTimer) clearTimeout(keywordTimer)
 })
+
+watch(keyword, handleKeywordChange)
 
 const handleSelectSpot = (spot) => {
   setSelectedSpot(spot)
@@ -186,29 +240,6 @@ const handleSelectSpot = (spot) => {
   color: var(--muted-foreground);
 }
 
-.sidebar-search-button {
-  width: 100%;
-  border-radius: 12px;
-  border: none;
-  padding: 10px 14px;
-  background: var(--sidebar-primary);
-  color: var(--sidebar-primary-foreground);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 10px 24px rgba(56, 189, 248, 0.3);
-  transition:
-    background 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.1s ease;
-}
-
-.sidebar-search-button:hover {
-  background: color-mix(in oklch, var(--sidebar-primary) 90%, white 10%);
-  box-shadow: 0 12px 30px rgba(56, 189, 248, 0.4);
-  transform: translateY(-1px);
-}
-
 .sidebar-list {
   flex: 1;
   overflow-y: auto;
@@ -217,8 +248,8 @@ const handleSelectSpot = (spot) => {
   flex-direction: column;
 }
 
-/* 시군구 토글 버튼 */
 .setting-btn {
+  position: relative;
   width: 40px;
   height: 40px;
   display: flex;
@@ -265,13 +296,10 @@ const handleSelectSpot = (spot) => {
   transform: translateX(-4px);
 }
 
-/* 🔹 전체 화면 오버레이 */
 .region-overlay {
   position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   z-index: 1000;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
 }
 </style>

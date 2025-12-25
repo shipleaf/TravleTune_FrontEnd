@@ -1,5 +1,6 @@
 ﻿<template>
   <div class="page">
+    <IntroVideo v-if="showIntro" @finished="onIntroFinished" @phase="onIntroPhase" />
     <div class="page-header">
       <HeaderBar />
     </div>
@@ -90,21 +91,33 @@
         <GeolocationAttractions />
       </section>
     </main>
-    <div class="player-container">
-      <MusicPlayer />
-    </div>
+    <MusicPlayer />
   </div>
 </template>
 
 <script setup>
-import UpcomingPlan from '@/components/main/UpcomingPlan.vue'
 import MusicPlayer from '@/components/main/MusicPlayer.vue'
+import IntroVideo from '@/components/main/IntroVideo.vue'
+import UpcomingPlan from '@/components/main/UpcomingPlan.vue'
 import GeolocationAttractions from '@/components/main/GeolocationAttractions.vue'
 import FriendList from '@/components/main/FriendList.vue'
 import { ref, computed, onBeforeUnmount, nextTick, onMounted } from 'vue'
 import HeaderBar from '@/components/common/HeaderBar.vue'
 import { SendHorizontal, ImageUp } from 'lucide-vue-next'
 
+const showIntro = ref(true)
+const isSkeleton = ref(false)
+
+const onIntroPhase = (phase) => {
+  if (phase === 'shrink') {
+    isSkeleton.value = true
+  }
+}
+
+const onIntroFinished = () => {
+  showIntro.value = false
+  isSkeleton.value = false
+}
 const fileInputRef = ref(null)
 const textareaRef = ref(null)
 
@@ -189,9 +202,9 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .prompt-container {
   width: 100%;
-  padding: 0 20%;
+  padding: 0 10%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .page-header {
@@ -235,12 +248,14 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  // padding-bottom: 120px;
 }
 
 .main-container {
   width: 100%;
   display: flex;
   flex: 1;
+  padding-bottom: 150px;
 }
 
 .friend-container {
@@ -269,6 +284,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 
 .prompt__label {
@@ -464,7 +480,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  width: 100%;
+  width: 70%;
 }
 
 .prompt__helper {

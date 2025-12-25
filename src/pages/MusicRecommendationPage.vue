@@ -63,6 +63,7 @@ watch(
 onBeforeUnmount(() => {
   unlockBodyScroll()
   selectedPlayerSpot.value = null
+  store.deleteSelectedSpot()
 })
 </script>
 
@@ -72,6 +73,7 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 .app-page {
+  position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
@@ -80,6 +82,7 @@ onBeforeUnmount(() => {
 }
 
 .app-main {
+  position: relative;
   width: 100%;
   height: calc(100% - 96px);
   padding: 1% 15% 1%;
@@ -97,6 +100,7 @@ onBeforeUnmount(() => {
 }
 
 .contents {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;

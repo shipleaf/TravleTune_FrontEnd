@@ -1,5 +1,11 @@
 <template>
   <section class="hero-slider hero-style">
+    <button class="custom-nav custom-prev">
+      <ChevronLeft :size="28" />
+    </button>
+    <button class="custom-nav custom-next">
+      <ChevronRight :size="28" />
+    </button>
     <Swiper
       class="swiper"
       :modules="modules"
@@ -7,8 +13,10 @@
       :speed="1000"
       :parallax="true"
       :autoplay="{ delay: 6500, disableOnInteraction: false }"
-      :pagination="{ clickable: true }"
-      :navigation="true"
+      :navigation="{
+        prevEl: '.custom-prev',
+        nextEl: '.custom-next',
+      }"
       :watchSlidesProgress="true"
       @progress="onProgress"
       @touchStart="onTouchStart"
@@ -45,6 +53,7 @@ import 'swiper/css/pagination'
 import 'swiper/css/navigation'
 import { ref, onMounted } from 'vue'
 import { getTripsMock } from '@/api/tripApi'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
 const upcomingTrips = ref([])
 const isLoading = ref(false)
@@ -131,11 +140,55 @@ const onSetTransition = (swiper, speed) => {
 </script>
 
 <style lang="scss" scoped>
+/* hero-slider가 기준이 되도록 */
+.hero-slider {
+  position: relative;
+}
+
+/* ✅ 기본: 안 보임 + 클릭도 안 됨 */
+.custom-nav {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateX(0);
+  z-index: 10;
+
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  backdrop-filter: blur(6px);
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease,
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+
+.custom-prev {
+  left: 20px;
+}
+
+.custom-next {
+  right: 20px;
+}
+
 .slide-inner {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
+  border-radius: 16px;
 }
 
 /* ✅ 사진 위 오버레이 */
@@ -177,14 +230,15 @@ const onSetTransition = (swiper, speed) => {
 }
 
 .hero-slider {
-  width: 100%;
-  height: 700px;
+  width: 70%;
+  height: 600px;
   display: flex;
   position: relative;
+
   z-index: 0;
 }
 
-.hero-slider .swiper {
+.swiper {
   width: 100%;
   height: 100%;
 }
@@ -210,27 +264,50 @@ const onSetTransition = (swiper, speed) => {
   text-align: left;
 }
 
-/* ✅ navigation/pagination 클래스는 Swiper가 만들어줌 -> deep으로 스타일 적용 */
-.hero-slider :deep(.swiper-button-prev),
-.hero-slider :deep(.swiper-button-next) {
-  background: transparent;
-  width: 55px;
-  height: 55px;
-  line-height: 53px;
-  margin-top: -30px;
-  text-align: center;
-  border: 2px solid #d4d3d3;
-  border-radius: 55px;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.hero-slider:hover :deep(.swiper-button-prev),
-.hero-slider:hover :deep(.swiper-button-next) {
-  transform: translateX(0);
+.hero-slider:hover .custom-nav {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
+}
+
+.custom-prev {
+  left: 20px;
+  transform: translateY(-50%) translateX(-8px); /* 숨겨질 때 살짝 왼쪽으로 */
+}
+
+.custom-next {
+  right: 20px;
+  transform: translateY(-50%) translateX(8px); /* 숨겨질 때 살짝 오른쪽으로 */
+}
+
+/* ✅ navigation/pagination 클래스는 Swiper가 만들어줌 -> deep으로 스타일 적용 */
+// .hero-slider :deep(.swiper-button-prev),
+// .hero-slider :deep(.swiper-button-next) {
+//   background: transparent;
+//   width: 55px;
+//   height: 55px;
+//   line-height: 53px;
+//   margin-top: -30px;
+//   text-align: center;
+//   border: 2px solid #d4d3d3;
+//   border-radius: 55px;
+//   opacity: 0;
+//   visibility: hidden;
+//   transition: all 0.3s ease;
+// }
+
+// .hero-slider:hover :deep(.swiper-button-prev),
+// .hero-slider:hover :deep(.swiper-button-next) {
+//   transform: translateX(0);
+//   opacity: 1;
+//   visibility: visible;
+// }
+
+.hero-slider:hover .custom-prev {
+  transform: translateY(-50%) translateX(0);
+}
+.hero-slider:hover .custom-next {
+  transform: translateY(-50%) translateX(0);
 }
 
 .hero-slider :deep(.swiper-button-prev) {
@@ -264,6 +341,9 @@ const onSetTransition = (swiper, speed) => {
 .hero-slider :deep(.swiper-pagination) {
   text-align: left;
 }
-
+.custom-nav:hover {
+  background: rgba(0, 0, 0, 0.55);
+  transform: translateY(-50%) scale(1.06);
+}
 /* 나머지 당신 CSS는 그대로 이어 붙여도 됩니다 */
 </style>

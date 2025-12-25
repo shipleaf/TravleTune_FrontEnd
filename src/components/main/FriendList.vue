@@ -184,8 +184,8 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .friend-panel {
-  width: 360px;
-  height: 600px;
+  width: 450px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;

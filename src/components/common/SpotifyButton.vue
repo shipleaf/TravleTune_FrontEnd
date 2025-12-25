@@ -30,16 +30,25 @@
 import { useSpotifyStore } from '@/stores/spotify'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted } from 'vue'
+import axiosApi from '@/api/axiosApi'
 
 const store = useSpotifyStore()
 const { accessToken } = storeToRefs(store)
+const { clearToken } = store
 
 onMounted(() => {
   console.log(accessToken)
 })
 
-function loginWithSpotify() {
-  window.location.href = 'http://localhost:3001/login'
+async function loginWithSpotify() {
+  try {
+    const res = await axiosApi.get('/spotify/login')
+    if (res?.data?.success && res?.data?.data?.auth_url) {
+      window.location.href = res.data.data.auth_url
+    }
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const isOn = computed({
@@ -49,6 +58,8 @@ const isOn = computed({
   set(value) {
     if (value && !accessToken.value) {
       loginWithSpotify()
+    } else if (!value) {
+      clearToken()
     }
   },
 })

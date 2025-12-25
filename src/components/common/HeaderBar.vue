@@ -424,7 +424,7 @@ const handleLogout = async () => {
   top: 150%;
   right: 0;
   width: 200px;
-  z-index: 3;
+  z-index: 300;
   /* background-color: rgba(36, 40, 50, 1);
 background-image: linear-gradient(135deg, rgba(36, 40, 50, 1) 0%, rgba(36, 40, 50, 1) 40%, rgba(37, 28, 40, 1) 100%); */
 
@@ -505,6 +505,7 @@ background-image: linear-gradient(135deg, rgba(36, 40, 50, 1) 0%, rgba(36, 40, 5
 }
 
 .app-header {
+  position: relative;
   top: 16px;
   left: 16px;
   right: 16px;

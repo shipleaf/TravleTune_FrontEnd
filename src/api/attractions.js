@@ -86,13 +86,15 @@ export function fetchMockSpots() {
   })
 }
 
-export const fetchSpots = ({ sidoCode, gunguCode, title, size } = {}) => {
+export const fetchSpots = ({ sidoCode, gunguCode, title, size = 10, cursor, contentType } = {}) => {
   const params = {}
 
   if (sidoCode) params.sido_code = sidoCode
   if (gunguCode) params.gungu_code = gunguCode
   if (title) params.title = title
+  if (cursor) params.cursor = cursor
   if (size) params.size = size
+  if (contentType && contentType !== 'all') params.content_type = contentType
 
   return axiosApi({
     url: '/attractions',

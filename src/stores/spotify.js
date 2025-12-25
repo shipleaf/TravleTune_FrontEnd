@@ -5,8 +5,11 @@ export const useSpotifyStore = defineStore(
   'spotify',
   () => {
     const accessToken = ref(null)
+    const clearToken = () => {
+      accessToken.value = null
+    }
 
-    return { accessToken }
+    return { accessToken, clearToken }
   },
   {
     persist: {

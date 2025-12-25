@@ -11,7 +11,6 @@ import SignupSuccess from '@/pages/SignupSuccess.vue'
 import PlanDetailPage from '@/pages/PlanDetailPage.vue'
 import LandingPage from '@/pages/LandingPage.vue'
 import FriendPage from '@/pages/FriendPage.vue'
-import VideoTest from '@/pages/VideoTest.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -47,11 +46,6 @@ const router = createRouter({
       path: '/signup-success',
       name: 'signup-success',
       component: SignupSuccess,
-    },
-    {
-      path: '/test',
-      name: 'test',
-      component: VideoTest,
     },
     {
       path: '/extra-info',

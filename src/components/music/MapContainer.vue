@@ -1,5 +1,3 @@
-<!-- 카카오 맵과 마커가 선택되었을 때 관광지 정보와 album 선택을 제공 -->
-
 <template>
   <div id="container">
     <div id="mapContainer">
@@ -21,72 +19,108 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch, onBeforeUnmount } from 'vue'
 import { useSpotStore } from '@/stores/spot'
+import { storeToRefs } from 'pinia'
 
 const store = useSpotStore()
-
-const { selectedSpot } = store
 const { setSelectedSpot } = store
+const { spots } = storeToRefs(store)
 
 const kakaoKey = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY
 
 const isLoading = ref(false)
+const map = ref(null)
+const markers = ref([])
+const overlays = ref([])
+const overlayTimers = ref([])
 
-// ✅ 우리가 가진 지역 데이터 (실제론 props로 받아도 됨)
-const attractions = [
-  {
-    attractions_id: 1,
-    name: '서울시청',
-    description: '서울시청입니다',
-    image: '/src/assets/img/seoulCityHall.webp',
-    latitude: 37.5665,
-    longitude: 126.978,
-  },
-]
+const clearMarkers = () => {
+  markers.value.forEach((m) => m.setMap && m.setMap(null))
+  overlays.value.forEach((o) => o.setMap && o.setMap(null))
+  overlayTimers.value.forEach((t) => t && clearTimeout(t))
+  markers.value = []
+  overlays.value = []
+  overlayTimers.value = []
+}
+
+const renderMarkers = () => {
+  if (!map.value || !spots.value) return
+
+  clearMarkers()
+
+  // eslint-disable-next-line
+  const bounds = new kakao.maps.LatLngBounds()
+
+  spots.value.forEach((spot) => {
+    if (!spot.latitude || !spot.longitude) return
+
+    // eslint-disable-next-line
+    const position = new kakao.maps.LatLng(Number(spot.latitude), Number(spot.longitude))
+    // eslint-disable-next-line
+    const marker = new kakao.maps.Marker({
+      position,
+      map: map.value,
+    })
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position,
+      yAnchor: 1.9,
+      zIndex: 10,
+      clickable: false,
+      content: `<div class="marker-tooltip">${spot.title ?? ''}</div>`,
+    })
+
+    let hideTimer = null
+
+    // eslint-disable-next-line
+    kakao.maps.event.addListener(marker, 'mouseover', () => {
+      if (hideTimer) {
+        clearTimeout(hideTimer)
+        hideTimer = null
+      }
+      overlay.setMap(map.value)
+    })
+    // eslint-disable-next-line
+    kakao.maps.event.addListener(marker, 'mouseout', () => {
+      hideTimer = setTimeout(() => {
+        overlay.setMap(null)
+      }, 120)
+    })
+    // eslint-disable-next-line
+    kakao.maps.event.addListener(marker, 'click', () => {
+      setSelectedSpot(spot)
+    })
+
+    markers.value.push(marker)
+    overlays.value.push(overlay)
+    overlayTimers.value.push(hideTimer)
+    bounds.extend(position)
+  })
+
+  if (spots.value.length > 0) {
+    map.value.setBounds(bounds)
+  }
+}
 
 const initMap = function () {
   const container = document.getElementById('map')
   const options = {
     // eslint-disable-next-line
     center: new kakao.maps.LatLng(37.5665, 126.978),
-    level: 3,
+    level: 7,
   }
 
   // eslint-disable-next-line
-  const map = new kakao.maps.Map(container, options)
-
-  // 🔥 1) 우리가 가진 데이터로 마커 생성
-  attractions.forEach((attraction) => {
-    // eslint-disable-next-line
-    const markerPos = new kakao.maps.LatLng(attraction.latitude, attraction.longitude)
-    // eslint-disable-next-line
-    const marker = new kakao.maps.Marker({
-      position: markerPos,
-      map,
-    })
-
-    // 🔥 2) 마커 클릭 이벤트 → Vue 상태 변경
-    // eslint-disable-next-line
-    kakao.maps.event.addListener(marker, 'click', () => {
-      if (!selectedSpot) {
-        isLoading.value = true
-        setSelectedSpot(attraction)
-      } else {
-        alert('이미 선택된 관광지가 존재합니다.')
-      }
-    })
-  })
+  map.value = new kakao.maps.Map(container, options)
+  renderMarkers()
 }
 
 onMounted(() => {
-  // 이미 SDK가 로드되어 있다면 그대로 사용
   if (window.kakao && window.kakao.maps) {
     initMap()
   } else {
-    // 아직 로드 안 됨 → script 로드
     const script = document.createElement('script')
-    // http 말고 https 혹은 // 권장
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoKey}&autoload=false`
     script.onload = () => {
       // eslint-disable-next-line
@@ -95,6 +129,18 @@ onMounted(() => {
     document.head.appendChild(script)
   }
 })
+
+onBeforeUnmount(() => {
+  clearMarkers()
+})
+
+watch(
+  spots,
+  () => {
+    renderMarkers()
+  },
+  { deep: true },
+)
 </script>
 
 <style lang="scss" scoped>
@@ -116,33 +162,35 @@ onMounted(() => {
   flex: 1;
 }
 
-/* 🔥 바텀 시트 위치 */
+.marker-tooltip {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  margin-bottom: 6px;
+}
+
 .sheet-panel {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-
-  /* 원하는 높이 (조정 가능) */
   height: 90vh;
-
   z-index: 10;
-  /* 지도 위 덮도록 */
   pointer-events: auto;
 }
 
-/* =========================
-   Vue <Transition name="sheet"> 규칙
-   ========================= */
-
-/* 처음 들어올 때 시작 상태, 나갈 때 끝 상태 */
 .sheet-enter-from,
 .sheet-leave-to {
-  transform: translateY(100%); /* 화면 아래에 숨겨진 상태 */
+  transform: translateY(100%);
   opacity: 0;
 }
 
-/* 트랜지션 동안 적용 */
 .sheet-enter-active,
 .sheet-leave-active {
   transition:
@@ -150,7 +198,6 @@ onMounted(() => {
     opacity 0.3s ease-out;
 }
 
-/* 들어올 때 끝 상태, 나갈 때 시작 상태 */
 .sheet-enter-to,
 .sheet-leave-from {
   transform: translateY(0%);
@@ -159,14 +206,14 @@ onMounted(() => {
 
 .loading-overlay {
   position: absolute;
-  inset: 0; /* top, right, bottom, left 모두 0 */
-  z-index: 20; /* 바텀시트(z-index:10)보다 위로 */
-  background: rgba(0, 0, 0, 0.35); /* ✅ 화면 어둡게 효과 */
-  backdrop-filter: blur(2px); /* 선택: 약간의 블러 효과 */
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.3s ease; /* 부드럽게 나타났다가 사라지게 */
+  transition: opacity 0.3s ease;
 }
 
 .loader {

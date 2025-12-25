@@ -36,7 +36,7 @@ const errorMsg = ref('')
 
 const mapPlaces = ref([])
 
-const onItinerariesLoaded = ({ day, places }) => {
+const onItinerariesLoaded = ({ places }) => {
   mapPlaces.value = places
 }
 
