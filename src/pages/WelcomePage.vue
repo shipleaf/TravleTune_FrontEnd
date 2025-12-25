@@ -133,7 +133,7 @@
             </div>
             <div class="prompt">
               <label class="prompt__label">다가오는 일정</label>
-              <span class="prompt__desc"> 사진과 문장으로 어울리는 음악을 추천해요 </span>
+              <span class="prompt__desc"> 소중한 사람들과 떠날 여행 일정이에요 </span>
               <UpcomingPlan />
             </div>
           </div>
@@ -144,7 +144,7 @@
         <GeolocationAttractions />
       </section>
     </main>
-    <MusicPlayer :external-track="selectedTrack" />
+    <MusicPlayer :externalTrack="selectedTrack" />
   </div>
 </template>
 
@@ -352,6 +352,11 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+:global(:root) {
+  --mood-accent-rgb: 0, 0, 0;
+  --mood-glow-soft: rgba(0, 0, 0, 0);
+  --mood-glow-strong: rgba(0, 0, 0, 0);
+}
 .prompt-container {
   width: 100%;
   max-width: 1460px;
@@ -366,6 +371,14 @@ onBeforeUnmount(() => {
 .page-header {
   padding-top: 16px;
   width: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--mood-accent-rgb), 0.22),
+    rgba(var(--mood-accent-rgb), 0.08),
+    transparent
+  );
+  border-bottom: 1px solid rgba(var(--mood-accent-rgb), 0.24);
+  box-shadow: 0 12px 30px rgba(var(--mood-accent-rgb), 0.18);
 }
 
 /* ✅ 검은 블러 막 (불꽃 위, 컨텐츠 아래) */
@@ -404,7 +417,10 @@ onBeforeUnmount(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  // padding-bottom: 120px;
+  background:
+    radial-gradient(circle at 18% 0%, var(--mood-glow-soft, rgba(34, 197, 94, 0.1)), transparent 36%),
+    radial-gradient(circle at 82% 6%, var(--mood-glow-soft, rgba(34, 197, 94, 0.1)), transparent 36%),
+    linear-gradient(180deg, #0b0f18 0%, #05070e 55%, #04060c 100%);
 }
 
 .main-container {
@@ -412,6 +428,20 @@ onBeforeUnmount(() => {
   display: flex;
   flex: 1;
   padding-bottom: 150px;
+  position: relative;
+}
+
+.main-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 0%,
+    var(--mood-glow-strong, rgba(34, 197, 94, 0.18)),
+    transparent 52%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .friend-container {
@@ -429,6 +459,8 @@ onBeforeUnmount(() => {
   flex: 1;
   gap: 32px;
   padding: 32px 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .mood-card {
@@ -813,8 +845,9 @@ onBeforeUnmount(() => {
 }
 
 .rec-card.active {
-  background: rgba(34, 197, 94, 0.1);
-  box-shadow: 0 10px 32px rgba(34, 197, 94, 0.2);
+  background: rgba(var(--mood-accent-rgb), 0.12);
+  box-shadow: 0 10px 32px rgba(var(--mood-accent-rgb), 0.28);
+  border: 1px solid rgba(var(--mood-accent-rgb), 0.36);
 }
 
 .rec-heading {

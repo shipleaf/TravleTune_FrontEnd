@@ -27,7 +27,8 @@
           @click="toggleSelect(option.id)"
         >
           <div class="img-wrap">
-            <img :src="option.image || '/placeholder.svg'" :alt="option.name" class="img" />
+            <img v-if="option.image" :src="option.image" :alt="option.name" class="img" />
+            <div v-else class="avatar-fallback">{{ option.name?.slice(0, 2) }}</div>
           </div>
 
           <div class="text">
@@ -66,105 +67,164 @@
 <script setup>
 import { computed, ref } from 'vue'
 
+import axiosApi from '@/api/axiosApi'
+
 const ARTISTS = [
-  {
-    id: '1',
-    name: 'The Weeknd',
-    subtitle: 'Pop, R&B',
-    image: '/src/assets/img/the-weeknd-artist.jpg',
-  },
-  {
-    id: '2',
-    name: 'Taylor Swift',
-    subtitle: 'Pop, Country',
-    image: '/src/assets/img/famous-musician.png',
-  },
-  { id: '3', name: 'Drake', subtitle: 'Hip Hop, Rap', image: '/src/assets/img/drake-artist.jpg' },
-  {
-    id: '4',
-    name: 'Billie Eilish',
-    subtitle: 'Alternative, Pop',
-    image: '/src/assets/img/billie-eilish-artist.jpg',
-  },
-  {
-    id: '5',
-    name: 'Ed Sheeran',
-    subtitle: 'Pop, Folk',
-    image: '/src/assets/img/singer-songwriter-stage.png',
-  },
-  {
-    id: '6',
-    name: 'Ariana Grande',
-    subtitle: 'Pop, R&B',
-    image: '/src/assets/img/ariana-grande-artist.jpg',
-  },
+  { id: 31, name: '오혁' },
+  { id: 32, name: 'FIFTY FIFTY' },
+  { id: 33, name: '4Minute' },
+  { id: 34, name: 'NewJeans' },
+  { id: 35, name: 'Red Velvet' },
+  { id: 36, name: '10CM' },
+  { id: 37, name: '승리' },
+  { id: 38, name: 'BIGBANG' },
+  { id: 39, name: '소녀시대' },
+  { id: 40, name: '길구봉구' },
+  { id: 41, name: '경서' },
+  { id: 42, name: '허각' },
+  { id: 43, name: 'EXO' },
+  { id: 44, name: '아이유' },
+  { id: 45, name: '리쌍' },
+  { id: 46, name: 'Yangpa' },
+  { id: 47, name: '김하온' },
+  { id: 48, name: '첸' },
+  { id: 49, name: 'Hot Potato' },
+  { id: 50, name: 'ILLIT' },
 ]
 
 const GENRES = [
-  { id: '1', name: 'Pop', subtitle: 'Popular music', image: '/src/assets/img/pop-music-genre.jpg' },
-  {
-    id: '2',
-    name: 'Rock',
-    subtitle: 'Rock and roll',
-    image: '/src/assets/img/rock-music-genre.jpg',
-  },
-  {
-    id: '3',
-    name: 'Hip Hop',
-    subtitle: 'Rap and beats',
-    image: '/src/assets/img/hip-hop-genre.jpg',
-  },
-  {
-    id: '4',
-    name: 'Jazz',
-    subtitle: 'Classic jazz',
-    image: '/src/assets/img/jazz-music-genre.jpg',
-  },
-  {
-    id: '5',
-    name: 'Electronic',
-    subtitle: 'EDM and techno',
-    image: '/src/assets/img/electronic-music-genre.jpg',
-  },
-  {
-    id: '6',
-    name: 'Classical',
-    subtitle: 'Orchestra',
-    image: '/src/assets/img/classical-music-genre.jpg',
-  },
+  { id: 20, name: 'K-발라드' },
+  { id: 21, name: '케이팝' },
+  { id: 22, name: '사운드트랙' },
+  { id: 23, name: '한국 랩' },
+  { id: 24, name: '한국 록' },
+  { id: 25, name: '버블검 팝' },
+  { id: 26, name: 'J-pop' },
+  { id: 27, name: 'j-R&B' },
+  { id: 28, name: '노이즈 음악' },
+  { id: 29, name: '시티 팝' },
 ]
 
 const SONGS = [
   {
-    id: '1',
-    name: 'Blinding Lights',
-    subtitle: 'The Weeknd',
-    image: '/src/assets/img/blinding-lights-song.jpg',
+    id: 30,
+    name: '소녀',
+    subtitle: '오혁',
+    image: 'https://i.scdn.co/image/ab67616d0000b27398cebc1a9eb5555af0e1cade',
   },
   {
-    id: '2',
-    name: 'Anti-Hero',
-    subtitle: 'Taylor Swift',
-    image: '/src/assets/img/anti-hero-song.jpg',
-  },
-  { id: '3', name: "God's Plan", subtitle: 'Drake', image: '/src/assets/img/gods-plan-song.jpg' },
-  {
-    id: '4',
-    name: 'Bad Guy',
-    subtitle: 'Billie Eilish',
-    image: '/src/assets/img/bad-guy-song.jpg',
+    id: 31,
+    name: 'Cupid',
+    subtitle: 'FIFTY FIFTY',
+    image: 'https://i.scdn.co/image/ab67616d0000b273eb535219dc875690e09dd8f9',
   },
   {
-    id: '5',
-    name: 'Shape of You',
-    subtitle: 'Ed Sheeran',
-    image: '/src/assets/img/shape-of-you-song.jpg',
+    id: 32,
+    name: '이름이 뭐예요?',
+    subtitle: '4Minute',
+    image: 'https://i.scdn.co/image/ab67616d0000b2739b2240d4c622dd529d9dc1ee',
   },
   {
-    id: '6',
-    name: 'Positions',
-    subtitle: 'Ariana Grande',
-    image: '/src/assets/img/placeholder.svg?height=80&width=80',
+    id: 33,
+    name: 'Cookie',
+    subtitle: 'NewJeans',
+    image: 'https://i.scdn.co/image/ab67616d0000b2739d28fd01859073a3ae6ea209',
+  },
+  {
+    id: 34,
+    name: '피카부 (Peek-A-Boo)',
+    subtitle: 'Red Velvet',
+    image: 'https://i.scdn.co/image/ab67616d0000b2736538b8e1b5c7b2a9d2211769',
+  },
+  {
+    id: 35,
+    name: '스토커',
+    subtitle: '10CM',
+    image: 'https://i.scdn.co/image/ab67616d0000b2736c38e41f13abf275a8cf066f',
+  },
+  {
+    id: 36,
+    name: '셋 셀테니 (1, 2, 3!)',
+    subtitle: '승리',
+    image: 'https://i.scdn.co/image/ab67616d0000b27343a916c2fa6bc0cc3f63d123',
+  },
+  {
+    id: 37,
+    name: '쩔어 (GD&T.O.P)',
+    subtitle: 'BIGBANG',
+    image: 'https://i.scdn.co/image/ab67616d0000b273fd0d9a33127c1d3f58ba3504',
+  },
+  {
+    id: 38,
+    name: '훗 (Hoot)',
+    subtitle: '소녀시대',
+    image: 'https://i.scdn.co/image/ab67616d0000b2738836e229149c876eb60c7885',
+  },
+  {
+    id: 39,
+    name: '이 별',
+    subtitle: '길구봉구',
+    image: 'https://i.scdn.co/image/ab67616d0000b273526d6799731a72a8426c15ca',
+  },
+  {
+    id: 40,
+    name: '나의 X에게',
+    subtitle: '경서',
+    image: 'https://i.scdn.co/image/ab67616d0000b2739659451f3c10481af6a4587e',
+  },
+  {
+    id: 41,
+    name: '물론',
+    subtitle: '허각',
+    image: 'https://i.scdn.co/image/ab67616d0000b273d0d379eee69cf9d53c8f7b83',
+  },
+  {
+    id: 42,
+    name: 'Universe',
+    subtitle: 'EXO',
+    image: 'https://i.scdn.co/image/ab67616d0000b27382c1b5cc2b62cae85ef7ffdb',
+  },
+  {
+    id: 43,
+    name: '밤편지',
+    subtitle: '아이유',
+    image: 'https://i.scdn.co/image/ab67616d0000b273c06f0e8b33ac2d246158253e',
+  },
+  {
+    id: 44,
+    name: '나란 놈은 답은 너다 (feat. 하림)',
+    subtitle: '리쌍',
+    image: 'https://i.scdn.co/image/ab67616d0000b2739d2c67d5318d278ff7d6f4b9',
+  },
+  {
+    id: 45,
+    name: '사랑은 다 그런거래요',
+    subtitle: 'Yangpa',
+    image: 'https://i.scdn.co/image/ab67616d0000b273549ebd9968bb3a1385daa6aa',
+  },
+  {
+    id: 46,
+    name: '바코드 (Prod. GroovyRoom)',
+    subtitle: '김하온',
+    image: 'https://i.scdn.co/image/ab67616d0000b2732e60c813d04d2de52a7568e3',
+  },
+  {
+    id: 47,
+    name: '최고의 행운',
+    subtitle: '첸',
+    image: 'https://i.scdn.co/image/ab67616d0000b27394ef09fcc9d51d6515a67e94',
+  },
+  {
+    id: 48,
+    name: '고백',
+    subtitle: 'Hot Potato',
+    image: 'https://i.scdn.co/image/ab67616d0000b27340c8155542841bc57b60c36a',
+  },
+  {
+    id: 49,
+    name: 'Dumb Dumb',
+    subtitle: 'Red Velvet',
+    image: 'https://i.scdn.co/image/ab67616d0000b27371a70331062453ece06f8b79',
   },
 ]
 
@@ -207,18 +267,24 @@ const toggleSelect = (id) => {
 
 const canProceed = computed(() => currentSelection.value.length > 0)
 
-const handleSave = () => {
+const handleSave = async () => {
   if (step.value < 3) {
     step.value += 1
     return
   }
 
-  console.log('[Music preferences saved]:', {
-    artists: selectedArtists.value,
-    genres: selectedGenres.value,
-    songs: selectedSongs.value,
-  })
-  // 최종 제출 로직 연결 위치
+  try {
+    await axiosApi.post('/members/preferences', {
+      artist_ids: selectedArtists.value,
+      music_ids: selectedSongs.value,
+    })
+    console.log('취향 저장 완료', {
+      artist_ids: selectedArtists.value,
+      music_ids: selectedSongs.value,
+    })
+  } catch (e) {
+    console.error('취향 저장 실패', e)
+  }
 }
 </script>
 
@@ -228,7 +294,9 @@ $page-blue: oklch(0.75 0.15 195);
 .page {
   width: 100%;
   min-height: 100vh;
-  background: #000;
+  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.14), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.12), transparent 42%),
+    #05070c;
   color: #fff;
   display: flex;
   align-items: center;
@@ -310,7 +378,11 @@ $page-blue: oklch(0.75 0.15 195);
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 
   @media (max-width: 520px) {
     grid-template-columns: 1fr;
@@ -324,8 +396,8 @@ $page-blue: oklch(0.75 0.15 195);
   gap: 16px;
   padding: 16px;
   border-radius: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
   cursor: pointer;
   transition:
     transform 160ms ease,
@@ -340,7 +412,8 @@ $page-blue: oklch(0.75 0.15 195);
 
   &.selected {
     border-color: $page-blue;
-    background: color-mix(in oklch, $page-blue 12%, transparent);
+    box-shadow: 0 16px 40px rgba(99, 102, 241, 0.25);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0.08));
   }
 }
 
@@ -351,6 +424,17 @@ $page-blue: oklch(0.75 0.15 195);
   overflow: hidden;
   flex: 0 0 auto;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 16px;
+  background: linear-gradient(135deg, #60a5fa, #a855f7, #ec4899);
+  color: #0b0b10;
 }
 
 .img {

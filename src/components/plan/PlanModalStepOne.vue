@@ -131,6 +131,7 @@ onMounted(() => {
 
 .region-box {
   padding: 12px 20px 12px 12px;
+  text-align: start;
 
   &:hover {
     cursor: pointer;

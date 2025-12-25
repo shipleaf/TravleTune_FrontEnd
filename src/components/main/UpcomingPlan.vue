@@ -1,20 +1,27 @@
 <template>
   <div class="carousel" @mouseenter="pause" @mouseleave="resume">
     <div class="viewport">
-      <div class="track" :style="trackStyle">
+      <div v-if="hasTrips" class="track" :style="trackStyle">
         <article v-for="trip in trips" :key="trip.trip_id || trip.title" class="card">
-          <img class="img" :src="trip.image_url" :alt="trip.title" />
+          <img class="img" :src="trip.image_url || defaultImage" :alt="trip.title" />
           <div class="overlay"></div>
 
           <div class="meta">
             <h3 class="title">{{ trip.title }}</h3>
-            <p class="addr">{{ trip.memo }}</p>
+            <p class="addr">
+              {{ trip.sido_name }} {{ trip.gungu_name }} ·
+              {{ formatDate(trip.start_date) }} ~ {{ formatDate(trip.end_date) }}
+            </p>
           </div>
         </article>
       </div>
+
+      <div v-else class="empty-card">
+        <p class="empty-text">아직 여행 일정이 없어요</p>
+      </div>
     </div>
 
-    <div class="dots">
+    <div v-if="hasTrips" class="dots">
       <button
         v-for="(_, i) in trips.length"
         :key="i"
@@ -30,17 +37,25 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { getTripsMock } from '@/api/tripApi'
+import { getTrips } from '@/api/tripApi'
 
 const trips = ref([])
 const index = ref(0)
+const defaultImage =
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=60'
 
 const intervalMs = 2500
 let timer = null
 
 const load = async () => {
-  const res = await getTripsMock()
-  trips.value = res?.data ?? []
+  try {
+    const res = await getTrips()
+    const payload = res?.data?.data ?? res?.data ?? res
+    trips.value = Array.isArray(payload) ? payload : []
+  } catch (e) {
+    console.error('여행 일정 로딩 오류:', e)
+    trips.value = []
+  }
 }
 
 const next = () => {
@@ -54,6 +69,7 @@ const go = (i) => {
 
 const start = () => {
   stop()
+  if (!trips.value.length) return
   timer = window.setInterval(next, intervalMs)
 }
 
@@ -75,6 +91,17 @@ onBeforeUnmount(() => stop())
 const trackStyle = computed(() => ({
   transform: `translateX(-${index.value * 100}%)`,
 }))
+
+const hasTrips = computed(() => trips.value.length > 0)
+
+const formatDate = (iso) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const m = `${d.getMonth() + 1}`.padStart(2, '0')
+  const day = `${d.getDate()}`.padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
 </script>
 
 <style lang="scss" scoped>
@@ -164,5 +191,22 @@ const trackStyle = computed(() => ({
 .dot.active {
   width: 28px;
   background: rgba(255, 255, 255, 0.95);
+}
+
+.empty-card {
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 700;
+  font-size: 18px;
+  background: rgba(17, 24, 39, 0.4);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.empty-text {
+  margin: 0;
 }
 </style>

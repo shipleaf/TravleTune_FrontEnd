@@ -22,6 +22,11 @@
           <span v-if="isDetailLoading" class="skeleton skeleton-line"></span>
           <span v-else>{{ selectedSpot.sido_name }} {{ selectedSpot.gungu_name }}</span>
 
+          <button class="pref-toggle" type="button" @click="togglePref">
+            <span class="dot" :class="{ on: applyPreferences }"></span>
+            <span>취향 반영 {{ applyPreferences ? 'ON' : 'OFF' }}</span>
+          </button>
+
           <button
             class="like-btn"
             type="button"
@@ -61,9 +66,11 @@ import { watch, ref } from 'vue'
 const store = useSpotStore()
 const { selectedSpot, selectedPlayerSpot } = storeToRefs(store)
 const { setSelectedSpot } = store
+const applyPreferences = ref(true)
 
 const renderMusicPlayer = () => {
-  selectedPlayerSpot.value = selectedSpot
+  // apply_preferences 전달
+  selectedPlayerSpot.value = { ...(selectedSpot.value || {}), apply_preferences: applyPreferences.value }
   console.log(selectedPlayerSpot)
   console.log(selectedPlayerSpot.value)
 }
@@ -112,6 +119,10 @@ const toggleLike = async () => {
   } finally {
     isLikeLoading.value = false
   }
+}
+
+const togglePref = () => {
+  applyPreferences.value = !applyPreferences.value
 }
 
 watch(
@@ -203,6 +214,39 @@ watch(
   font-size: 13px;
   letter-spacing: 0.2px;
   opacity: 0.95;
+}
+
+.pref-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(17, 24, 39, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pref-toggle:hover {
+  background: rgba(17, 24, 39, 0.5);
+  border-color: rgba(94, 234, 212, 0.35);
+}
+
+.pref-toggle .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pref-toggle .dot.on {
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
 }
 
 .skeleton {

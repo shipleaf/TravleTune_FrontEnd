@@ -17,6 +17,11 @@
       <div ref="subRef" class="intro__subtitle">
         사진 한 장, 한 장소의 분위기에서 당신의 여행에 어울리는 음악을 찾아드려요.
       </div>
+      <div ref="brandRef" class="intro__brand">TravelTune</div>
+    </div>
+
+    <div ref="badgeRef" class="intro__badge">
+      <img src="/src/assets/logo/Full_Logo_Green_CMYK.svg" alt="with Spotify" />
     </div>
 
     <button class="intro__skip" type="button" @click="skip">SKIP</button>
@@ -33,6 +38,8 @@ const wrapper = ref(null)
 const videoRef = ref(null)
 const titleRef = ref(null)
 const subRef = ref(null)
+const badgeRef = ref(null)
+const brandRef = ref(null)
 
 let tl = null
 
@@ -41,7 +48,8 @@ let tl = null
 const videoSrc = computed(() => '/src/assets/video/Intro.mp4')
 
 // 시연용 시간(원하면 props로 빼도 됨)
-const HOLD_SECONDS = 1
+const HOLD_SECONDS = 3.5
+const BRAND_HOLD_SECONDS = 1.4
 
 const playSafe = async () => {
   try {
@@ -55,23 +63,33 @@ const buildTimeline = () => {
   const w = wrapper.value
   const t1 = titleRef.value
   const t2 = subRef.value
-  if (!w) return
+  const badge = badgeRef.value
+  const brand = brandRef.value
+  if (!w || !t1 || !t2 || !badge || !brand) return
 
   // 초기 상태 세팅 (깜빡임 방지)
   gsap.set(w, { y: 0, opacity: 1, scale: 1, transformOrigin: '50% 50%' })
   gsap.set([t1, t2], { opacity: 0, y: 28 })
+  gsap.set(badge, { opacity: 0, y: 12 })
+  gsap.set(brand, { opacity: 0, scale: 0.82 })
 
   tl = gsap.timeline()
 
-  // 1) 텍스트 등장
+  // 1) 텍스트 + with Spotify 배지 등장
   tl.to(t1, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.2)
   tl.to(t2, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, 0.35)
+  tl.to(badge, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.35)
 
   // 2) 잠깐 홀드(영상 재생 구간)
   tl.to({}, { duration: HOLD_SECONDS })
 
-  // 3) 중앙으로 축소 + 텍스트는 같이 사라지게
-  tl.to([t1, t2], { opacity: 0, y: -10, duration: 0.45, ease: 'power2.out' }, '<')
+  // 3) 브랜드 로고 등장
+  tl.to(brand, { opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.6)' }, '<')
+  // 3-1) 브랜드가 잠시 머무르도록 추가 홀드
+  tl.to({}, { duration: BRAND_HOLD_SECONDS })
+
+  // 4) 중앙으로 축소 + 텍스트는 같이 사라지게
+  tl.to([t1, t2, badge, brand], { opacity: 0, y: -10, duration: 0.45, ease: 'power2.out' }, '<')
 
   tl.to(
     w,
@@ -128,6 +146,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
 .intro {
   /* ✅ 페이지를 덮는 오버레이 */
   position: fixed;
@@ -169,8 +189,11 @@ onBeforeUnmount(() => {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  padding: 10% 25%;
+  align-items: center;
+  justify-content: center;
+  padding: 12% 10%;
   pointer-events: none;
+  text-align: center;
 }
 
 .intro__title {
@@ -188,6 +211,39 @@ onBeforeUnmount(() => {
   font-weight: 650;
   color: rgba(255, 255, 255, 0.85);
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+.intro__brand {
+  margin-top: 20px;
+  font-family: 'Pacifico', cursive;
+  font-size: 3.6rem;
+  background: linear-gradient(90deg, #60a5fa, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(147, 51, 234, 0.5);
+  text-align: center;
+}
+
+.intro__badge {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 12px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(30, 215, 96, 0.4);
+  background: radial-gradient(circle at 30% 30%, rgba(30, 215, 96, 0.18), rgba(0, 0, 0, 0.55));
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(30, 215, 96, 0.35);
+
+  img {
+    display: block;
+    width: 240px;
+    height: auto;
+  }
 }
 
 .intro__skip {

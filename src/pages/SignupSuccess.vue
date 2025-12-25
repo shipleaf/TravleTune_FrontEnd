@@ -1,15 +1,15 @@
 <template>
   <div class="success-page">
     <div class="hero" :class="{ shrink: isShrunk }">
-      <div class="emoji" aria-hidden="true">🎉</div>
-      <h1 class="title">회원가입을 축하합니다!</h1>
-      <p class="desc">관광지별 추천 음악을 만나보세요!</p>
+      <div class="emoji" aria-hidden="true">✨</div>
+      <h1 class="title">회원가입이 완료되었습니다</h1>
+      <p class="desc">여행과 음악으로 가득한 순간을 준비했어요.</p>
+      <div class="subtext">추가 정보를 입력해 맞춤 추천을 받아보세요.</div>
     </div>
 
-    <!-- 애니메이션 끝난 뒤 버튼 노출(원하면) -->
     <div class="actions" :class="{ show: showActions }">
-      <button class="btn primary" type="button" @click="goMain">메인페이지 이동</button>
-      <button class="btn ghost" type="button" @click="skip">건너뛰기</button>
+      <button class="btn primary" type="button" @click="goExtra">추가 정보 입력</button>
+      <button class="btn ghost" type="button" @click="goLogin">로그인 화면으로</button>
     </div>
   </div>
 </template>
@@ -26,15 +26,12 @@ const showActions = ref(false)
 let t1, t2
 
 onMounted(() => {
-  // 1.5초 정도 크게 보여주기
   t1 = setTimeout(() => {
     isShrunk.value = true
-
-    // shrink 애니메이션 끝나갈 때 버튼 등장 (transition 시간과 맞추기)
     t2 = setTimeout(() => {
       showActions.value = true
-    }, 900) // 👈 아래 CSS에서 900ms로 늘릴 예정
-  }, 1500) // 👈 1000 -> 1500
+    }, 900)
+  }, 1500)
 })
 
 onBeforeUnmount(() => {
@@ -42,8 +39,8 @@ onBeforeUnmount(() => {
   clearTimeout(t2)
 })
 
-const goMain = () => router.push('/login')
-const skip = () => router.push('/login')
+const goExtra = () => router.push('/extra-info')
+const goLogin = () => router.push('/login')
 </script>
 
 <style lang="scss" scoped>
@@ -52,7 +49,9 @@ $page-blue: oklch(0.75 0.15 195);
 .success-page {
   width: 100%;
   min-height: 100vh;
-  background: #000;
+  background: radial-gradient(circle at 15% 20%, rgba(59, 130, 246, 0.18), transparent 42%),
+    radial-gradient(circle at 85% 15%, rgba(236, 72, 153, 0.16), transparent 40%),
+    #05060d;
   display: grid;
   place-items: center;
   padding: 24px;
@@ -68,14 +67,10 @@ $page-blue: oklch(0.75 0.15 195);
   border: 1px solid rgba(255, 255, 255, 0.14);
   text-align: center;
 
-  // ✅ 처음엔 크게 (가운데)
   transform: translateY(0) scale(3);
   opacity: 1;
-
-  // ✅ 부드럽게 줄어들기
   transition:
     transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
-    // 550ms -> 900ms
     opacity 900ms ease;
 
   .emoji {
@@ -96,6 +91,12 @@ $page-blue: oklch(0.75 0.15 195);
     color: rgba(255, 255, 255, 0.65);
     font-size: 14px;
     line-height: 1.6;
+  }
+
+  .subtext {
+    margin-top: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
   }
 
   &.shrink {

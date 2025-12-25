@@ -1,5 +1,12 @@
 <template>
   <div class="scene-wrapper" ref="wrapperRef">
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>추천 음악을 불러오는 중...</p>
+    </div>
+
+    <button class="close-btn" type="button" @click="handleClose">×</button>
+
     <!-- Three.js 캔버스 -->
     <canvas ref="canvasRef" id="scene"></canvas>
 
@@ -12,7 +19,11 @@
     </div>
 
     <div class="player-container" ref="playerContainerRef">
-      <MusicPlayerContainer v-if="store.accessToken && showPlayerUI" :tracks="tracks" />
+      <MusicPlayerContainer
+        v-if="store.accessToken && showPlayerUI"
+        :tracks="tracks"
+        :selected-track-id="selectedTrack?.id"
+      />
     </div>
   </div>
 </template>
@@ -28,7 +39,7 @@ import { useSpotStore } from '@/stores/spot'
 import { storeToRefs } from 'pinia'
 import axiosApi from '@/api/axiosApi'
 
-const emit = defineEmits(['loaded'])
+const emit = defineEmits(['loaded', 'close'])
 
 const store = useSpotifyStore()
 const spotStore = useSpotStore()
@@ -37,6 +48,7 @@ const { selectedPlayerSpot } = storeToRefs(spotStore)
 const tracks = ref([])
 
 const selectedTrack = ref(null)
+const loading = ref(true)
 
 function handleTrackSelect(track) {
   selectedTrack.value = track
@@ -73,11 +85,15 @@ function spawnSelectedAlbumMesh(track) {
 // 🔹 Spotify 추천/검색 API 호출을 여기로 이동
 async function loadTracks() {
   const attractionId = selectedPlayerSpot.value?.attraction_id
-  if (!attractionId) return
+  if (!attractionId) {
+    loading.value = false
+    return
+  }
+  const applyPreferences = selectedPlayerSpot.value?.apply_preferences ?? false
 
   try {
     const res = await axiosApi.get('/recommendations', {
-      params: { attraction_id: attractionId, size: 10 },
+      params: { attraction_id: attractionId, size: 10, apply_preferences: applyPreferences },
     })
     const list = res?.data?.data ?? []
 
@@ -96,6 +112,8 @@ async function loadTracks() {
     emit('loaded')
   } catch (err) {
     console.error('Spotify fetch error:', err)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -264,7 +282,7 @@ function revealPlayerUI() {
     gsap.fromTo(
       el,
       {
-        x: 200, // ✅ 오른쪽에서 시작
+        x: 200,
         opacity: 0,
       },
       {
@@ -510,6 +528,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
   if (animationId) cancelAnimationFrame(animationId)
 })
+
+function handleClose() {
+  emit('close')
+}
 </script>
 
 <style scoped>
@@ -542,6 +564,57 @@ canvas#scene {
   opacity: 0;
   pointer-events: none; /* 클릭 방지 (원하면) */
   transition: none; /* CSS transition 제거 */
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #e5e7eb;
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.close-btn:hover {
+  transform: scale(1.05);
+  background: rgba(0, 0, 0, 0.75);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .back-btn {

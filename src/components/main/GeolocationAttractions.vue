@@ -1,7 +1,7 @@
 <template>
   <div class="prompt">
-    <label class="prompt__label">주변 관광지 추천</label>
-    <span class="prompt__desc"> 주변 관광지를 좋아요 순으로 추천해요 </span>
+    <label class="prompt__label">주변 추천 관광지</label>
+    <span class="prompt__desc">지금 떠나기 좋은 여행지를 둘러보세요</span>
   </div>
   <div class="carousel" @mouseenter="pause" @mouseleave="resume">
     <div class="viewport" ref="viewportRef">
@@ -27,7 +27,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { fetchMockSpots } from '@/api/attractions'
+import { fetchSpots } from '@/api/attractions'
 import { Heart } from 'lucide-vue-next'
 
 const spots = ref([])
@@ -37,13 +37,31 @@ let rafId = null
 const speed = 0.6 // px per frame
 const offset = ref(0)
 const halfWidth = ref(0)
+const PAGE_SIZE = 10
 
 const load = async () => {
-  const res = await fetchMockSpots()
-  spots.value = res?.data?.data ?? []
+  try {
+    const res = await fetchSpots({
+      sidoCode: 5, // 부산
+      gunguCode: 1, // 중구
+      size: PAGE_SIZE,
+    })
+    const payload = res?.data?.data?.attractions ?? res?.data?.data ?? res?.data ?? []
+    spots.value = (payload || []).map((s, idx) => ({
+      ...s,
+      image: s.image_url || s.image,
+      title: s.title,
+      addr1: s.addr1 || s.sido_name || '',
+      addr2: s.addr2 || s.gungu_name || '',
+      likeCount: s.like_cnt ?? s.likeCount ?? 0,
+      _key: `${s.attraction_id || idx}-${idx}`,
+    }))
+  } catch (e) {
+    console.error('관광지 로딩 오류:', e)
+    spots.value = []
+  }
 }
 
-// ���� ���� ����: �����Ͱ� ��� ���� ���� ä�쵵�� ���� �� ����
 const displaySpots = computed(() => {
   const list = spots.value || []
   if (!list.length) return []
@@ -168,6 +186,11 @@ const trackStyle = computed(() => ({
   font-size: 22px;
   font-weight: 700;
   color: white;
+}
+
+.prompt__desc {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
 }
 
 .like-badge {

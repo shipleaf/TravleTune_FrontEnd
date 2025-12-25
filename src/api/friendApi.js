@@ -172,7 +172,7 @@ export const getReceivedRequestMock = () => {
 
 export const getFriends = () => {
   return axiosApi({
-    url: '/api/v1/friends',
+    url: '/friends',
     method: 'get',
     withCredentials: true,
   })

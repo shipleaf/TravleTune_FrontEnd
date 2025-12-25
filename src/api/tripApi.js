@@ -9,6 +9,14 @@ export const createTrip = (data) => {
   })
 }
 
+export const getTrips = () => {
+  return axiosApi({
+    url: '/trips',
+    method: 'get',
+    withCredentials: true,
+  })
+}
+
 export const getTripImageMock = (tripId) => {
   const imageMap = {
     1: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
@@ -223,6 +231,39 @@ export const getTripsMock = () => {
       },
     ],
     error: null,
+  })
+}
+
+export const getTripDetail = (tripId) => {
+  return axiosApi({
+    url: `/api/v1/trips/${tripId}`,
+    method: 'get',
+    withCredentials: true,
+  })
+}
+
+export const getTripImage = (tripId) => {
+  return axiosApi({
+    url: `/api/v1/trips/${tripId}/image`,
+    method: 'get',
+    withCredentials: true,
+  })
+}
+
+export const getItineraries = ({ trip_id, day_number }) => {
+  return axiosApi({
+    url: '/api/v1/itineraries',
+    method: 'get',
+    params: { trip_id, day_number },
+    withCredentials: true,
+  })
+}
+
+export const getItineraryDetail = (itineraryId) => {
+  return axiosApi({
+    url: `/api/v1/itineraries/${itineraryId}`,
+    method: 'get',
+    withCredentials: true,
   })
 }
 

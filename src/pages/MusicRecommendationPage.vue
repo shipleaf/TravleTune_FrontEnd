@@ -18,7 +18,7 @@
     <Teleport to="body">
       <div v-if="selectedPlayerSpot" class="album-overlay" @click.self="closeAlbum">
         <div class="album-modal">
-          <AlbumScene class="sheet-panel" @loaded="clearOverlay" />
+          <AlbumScene class="sheet-panel" @loaded="clearOverlay" @close="closeAlbum" />
         </div>
       </div>
     </Teleport>

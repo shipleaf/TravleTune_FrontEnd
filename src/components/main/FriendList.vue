@@ -3,7 +3,7 @@
     <header class="panel-header">
       <h3 class="panel-title">친구</h3>
       <button class="friend-button" @click="navigateToFriend">
-        <span class="panel-sub">자세히 보기</span>
+        <span class="panel-sub">전체 보기</span>
         <ChevronRight size="14" />
       </button>
     </header>
@@ -12,7 +12,7 @@
       <div class="block-header">
         <div class="block-title">받은 친구 요청</div>
         <div class="block-meta">
-          <span v-if="reqLoading" class="badge">로딩…</span>
+          <span v-if="reqLoading" class="badge">로딩중</span>
           <span v-else class="badge">{{ receivedRequests.length }}</span>
         </div>
       </div>
@@ -20,17 +20,15 @@
       <div class="block-body scroll" role="list">
         <div v-if="reqError" class="state state--error">{{ reqError }}</div>
         <div v-else-if="!reqLoading && receivedRequests.length === 0" class="state">
-          받은 요청이 없어요.
+          받은 요청이 없습니다
         </div>
 
         <div v-for="r in receivedRequests" :key="r.friend_id" class="row" role="listitem">
-          <img :src="r.profile_image" alt="profile" class="avatar" />
-
+          <img :src="r.profile_image || defaultAvatar" alt="profile" class="avatar" />
           <div class="row-info">
             <div class="row-title">{{ r.nickname }}</div>
-            <div class="row-sub">요청일: {{ formatDate(r.created_at) }}</div>
+            <div class="row-sub">요청 · {{ formatDate(r.created_at) }}</div>
           </div>
-
           <div class="row-actions">
             <button class="btn btn--accept" type="button" @click="acceptRequest(r.friend_id)">
               <Check size="20" />
@@ -47,7 +45,7 @@
       <div class="block-header">
         <div class="block-title">친구 목록</div>
         <div class="block-meta">
-          <span v-if="friendsLoading" class="badge">로딩…</span>
+          <span v-if="friendsLoading" class="badge">로딩중</span>
           <span v-else class="badge">{{ friends.length }}</span>
         </div>
       </div>
@@ -55,15 +53,14 @@
       <div class="block-body scroll" role="list">
         <div v-if="friendsError" class="state state--error">{{ friendsError }}</div>
         <div v-else-if="!friendsLoading && friends.length === 0" class="state">
-          아직 친구가 없어요.
+          아직 친구가 없습니다
         </div>
 
         <div v-for="f in friends" :key="f.friend_id" class="row" role="listitem">
-          <img :src="f.profile_image" alt="profile" class="avatar" />
-
+          <img :src="f.profile_image || defaultAvatar" alt="profile" class="avatar" />
           <div class="row-info">
             <div class="row-title">{{ f.nickname }}</div>
-            <div class="row-sub">member_id: {{ f.member_id }}</div>
+            <div class="row-sub" v-if="f.member_id">member_id: {{ f.member_id }}</div>
           </div>
         </div>
       </div>
@@ -74,35 +71,33 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getReceiveddRequest, getFriends } from '@/api/friendApi'
-
 import { ChevronRight, Check, X } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
-// ✅ state
 const receivedRequests = ref([])
 const friends = ref([])
 const router = useRouter()
 const reqLoading = ref(false)
 const friendsLoading = ref(false)
-
 const reqError = ref('')
 const friendsError = ref('')
+const defaultAvatar = 'https://via.placeholder.com/40?text=F'
 
 const loadReceivedRequests = async () => {
   reqLoading.value = true
   reqError.value = ''
-
   try {
     const res = await getReceiveddRequest()
-    if (res?.success) {
-      receivedRequests.value = res.data ?? []
+    const payload = res?.data ?? res
+    if (payload?.success === true) {
+      receivedRequests.value = payload.data ?? []
     } else {
       receivedRequests.value = []
-      reqError.value = res?.error?.message ?? '요청 목록을 불러오지 못했어요.'
+      reqError.value = payload?.error?.message ?? '요청 목록을 불러오지 못했습니다.'
     }
   } catch (e) {
     receivedRequests.value = []
-    reqError.value = '요청 목록 로딩 중 오류가 발생했어요.'
+    reqError.value = '요청 목록 로딩 중 오류가 발생했습니다.'
     console.error(e)
   } finally {
     reqLoading.value = false
@@ -116,62 +111,51 @@ const navigateToFriend = () => {
 const loadFriends = async () => {
   friendsLoading.value = true
   friendsError.value = ''
-
   try {
     const res = await getFriends()
-    if (res?.success) {
-      friends.value = res.data ?? []
+    const payload = res?.data ?? res
+    if (payload?.success === true) {
+      friends.value = payload.data ?? []
     } else {
       friends.value = []
-      friendsError.value = res?.error?.message ?? '친구 목록을 불러오지 못했어요.'
+      friendsError.value = payload?.error?.message ?? '친구 목록을 불러오지 못했습니다.'
     }
   } catch (e) {
     friends.value = []
-    friendsError.value = '친구 목록 로딩 중 오류가 발생했어요.'
+    friendsError.value = '친구 목록 로딩 중 오류가 발생했습니다.'
     console.error(e)
   } finally {
     friendsLoading.value = false
   }
 }
 
-// ✅ actions (현재는 mock이므로 UI 동작만)
 const acceptRequest = (friendId) => {
-  // TODO: 서버 연동 시 수락 API 호출
   receivedRequests.value = receivedRequests.value.filter((r) => r.friend_id !== friendId)
 }
 
 const declineRequest = (friendId) => {
-  // TODO: 서버 연동 시 거절 API 호출
   receivedRequests.value = receivedRequests.value.filter((r) => r.friend_id !== friendId)
 }
 
 const formatDate = (iso) => {
   if (!iso) return '-'
-
   const now = new Date()
   const target = new Date(iso)
   if (Number.isNaN(target.getTime())) return '-'
 
   const diffMs = now - target
-  const diffSec = Math.floor(diffMs / 1000)
-  const diffMin = Math.floor(diffSec / 60)
+  const diffMin = Math.floor(diffMs / 60000)
   const diffHour = Math.floor(diffMin / 60)
   const diffDay = Math.floor(diffHour / 24)
   const diffMonth = Math.floor(diffDay / 30)
   const diffYear = Math.floor(diffDay / 365)
 
   if (diffHour < 24) {
-    return diffHour <= 0 ? '방금 전' : `${diffHour}시간 전`
+    if (diffHour <= 0) return diffMin <= 1 ? '방금 전' : `${diffMin}분 전`
+    return `${diffHour}시간 전`
   }
-
-  if (diffDay < 30) {
-    return `${diffDay}일 전`
-  }
-
-  if (diffMonth < 12) {
-    return `${diffMonth}달 전`
-  }
-
+  if (diffDay < 30) return `${diffDay}일 전`
+  if (diffMonth < 12) return `${diffMonth}개월 전`
   return `${diffYear}년 전`
 }
 
@@ -263,7 +247,7 @@ onMounted(async () => {
 .block-body {
   min-height: 0;
   overflow-y: auto;
-  padding-right: 6px; /* scrollbar 여유 */
+  padding-right: 6px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -366,10 +350,6 @@ onMounted(async () => {
   }
 }
 
-.btn--ghost {
-  background: rgba(255, 255, 255, 0.06);
-}
-
 .state {
   padding: 10px;
   border-radius: 12px;
@@ -385,7 +365,6 @@ onMounted(async () => {
   background: rgba(239, 68, 68, 0.12);
 }
 
-/* ✅ 스크롤바 스타일 */
 .scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.28) transparent;

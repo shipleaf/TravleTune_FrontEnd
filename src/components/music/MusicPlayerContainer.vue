@@ -7,7 +7,7 @@
       <div class="albumAndPlayButton">
         <img :src="currentTrack.albumImage" alt="Album cover" class="album-cover" />
         <button @click="togglePlay" :disabled="!currentTrack" class="playButton">
-          {{ isPlaying ? '⏸︎' : '▶︎' }}
+          {{ isPlaying ? '⏸' : '▶' }}
         </button>
       </div>
       <div class="albumInfo">
@@ -17,7 +17,7 @@
         </div>
         <!-- 타임/시크바 -->
         <div class="playBar">
-          <button class="prevButton" @click="prevTrack" :disabled="tracks.length === 0">◀︎</button>
+          <button class="prevButton" @click="prevTrack" :disabled="tracks.length === 0">◀</button>
           <div class="progress" v-if="duration > 0">
             <span>{{ formatTime(currentTime) }}</span>
             <input
@@ -29,7 +29,7 @@
             />
             <span>{{ formatTime(duration) }}</span>
           </div>
-          <button class="nextButton" @click="nextTrack" :disabled="tracks.length === 0">▶︎</button>
+          <button class="nextButton" @click="nextTrack" :disabled="tracks.length === 0">▶</button>
         </div>
       </div>
     </div>
@@ -39,11 +39,11 @@
       <ul>
         <li
           v-for="(track, index) in tracks"
-          :key="track.id"
+          :key="track.id || index"
           :class="{ active: index === currentIndex }"
           @click="selectTrack(index)"
         >
-          <span class="number">{{ track.pk }}</span>
+          <span class="number">{{ track.pk ?? index + 1 }}</span>
           <div class="text">
             <div class="title">{{ track.title }}</div>
             <div class="artist">{{ track.artist }}</div>
@@ -54,7 +54,7 @@
 
     <audio
       ref="audioRef"
-      :src="currentTrack?.previewUrl"
+      :src="currentAudioSrc"
       @timeupdate="onTimeUpdate"
       @loadedmetadata="onLoadedMetadata"
       @ended="onEnded"
@@ -72,6 +72,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  selectedTrackId: {
+    type: [String, Number],
+    default: null,
+  },
 })
 
 const currentIndex = ref(0)
@@ -86,8 +90,9 @@ const spotifyDeviceId = ref(null)
 const store = useSpotifyStore()
 const { accessToken } = storeToRefs(store)
 
-const tracks = computed(() => props.tracks)
+const tracks = computed(() => props.tracks || [])
 const currentTrack = computed(() => tracks.value[currentIndex.value])
+const currentAudioSrc = computed(() => currentTrack.value?.previewUrl || '')
 
 async function playWithSpotify() {
   const track = currentTrack.value
@@ -180,7 +185,6 @@ function createPlayer() {
     })
 
     player.addListener('ready', ({ device_id }) => {
-      console.log('Player ready:', device_id)
       spotifyPlayer.value = player
       spotifyDeviceId.value = device_id
       resolve()
@@ -209,9 +213,60 @@ watch(currentTrack, (newTrack) => {
   }
 })
 
+watch(
+  () => props.tracks,
+  (list) => {
+    if (!list || !list.length) {
+      pauseAudio()
+      currentTime.value = 0
+      duration.value = 0
+      seekValue.value = 0
+      currentIndex.value = 0
+      return
+    }
+    if (currentIndex.value >= list.length) currentIndex.value = 0
+    setAudioSource(false)
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.selectedTrackId,
+  (id) => {
+    if (id) {
+      setIndexById(id, true)
+    }
+  },
+)
+
+function setAudioSource(autoPlay = false) {
+  const audio = audioRef.value
+  if (!audio) return
+  audio.src = currentAudioSrc.value
+  audio.load()
+  currentTime.value = 0
+  duration.value = 0
+  seekValue.value = 0
+
+  if (autoPlay && currentAudioSrc.value) {
+    playAudio()
+  } else {
+    pauseAudio()
+  }
+}
+
+function setIndexById(id, autoPlay = false) {
+  const idx = tracks.value.findIndex((t) => t.id === id || t.pk === id)
+  if (idx >= 0) {
+    currentIndex.value = idx
+    setAudioSource(autoPlay)
+  }
+}
+
 function playAudio() {
-  if (!audioRef.value) return
-  audioRef.value
+  const audio = audioRef.value
+  if (!audio || !currentAudioSrc.value) return
+  audio
     .play()
     .then(() => {
       isPlaying.value = true
@@ -219,6 +274,13 @@ function playAudio() {
     .catch((err) => {
       console.error('재생 오류:', err)
     })
+}
+
+function pauseAudio() {
+  const audio = audioRef.value
+  if (!audio) return
+  audio.pause()
+  isPlaying.value = false
 }
 
 function togglePlay() {
@@ -234,18 +296,18 @@ function togglePlay() {
 function prevTrack() {
   if (!tracks.value.length) return
   currentIndex.value = (currentIndex.value - 1 + tracks.value.length) % tracks.value.length
-  playAudio()
+  setAudioSource(true)
 }
 
 function nextTrack() {
   if (!tracks.value.length) return
   currentIndex.value = (currentIndex.value + 1) % tracks.value.length
-  playAudio()
+  setAudioSource(true)
 }
 
 function selectTrack(index) {
   currentIndex.value = index
-  playAudio()
+  setAudioSource(true)
 }
 
 function onTimeUpdate() {

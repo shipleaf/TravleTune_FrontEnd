@@ -2,13 +2,16 @@
   <div v-if="trips.length === 0" class="travel-empty">
     <div class="travel-empty__inner">
       <p class="travel-empty__text">
-        You don't have any trips yet. Create a new itinerary and start your next journey!
+        아직 일정이 없어요 일정 만들기를 통해 새로운 여행을 떠나보세요!
       </p>
 
-      <button class="btn-purple" type="button">
-        <Plus class="btn-purple__icon" />
-        Create New Trip
-      </button>
+      <div class="btn-container">
+        <button class="btn-purple" type="button" @click="open = true">
+          <Plus class="btn-purple__icon" />
+          새로운 여행
+        </button>
+      </div>
+      <NewPlanModal v-if="open" v-model="open" @accept="onAccept" @decline="onDecline" />
     </div>
   </div>
 
@@ -85,6 +88,9 @@ const upcomingTrips = computed(() => trips.value.filter((t) => t._startTs >= tod
 onMounted(async () => {
   const res = await getTripsMock()
 
+  console.log(res)
+
+  // const base = res.data.data.map((t) => ({
   const base = res.data.map((t) => ({
     ...t,
     _startTs: Date.parse(t.start_date),
@@ -157,7 +163,7 @@ onMounted(async () => {
   padding: 32px;
 
   &__inner {
-    text-align: center;
+    text-align: left;
     max-width: 520px;
   }
 
@@ -165,7 +171,14 @@ onMounted(async () => {
     margin: 0;
     font-size: 18px;
     color: rgba(244, 244, 245, 0.7);
+    text-align: left;
   }
+}
+
+.btn-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .btn-purple {

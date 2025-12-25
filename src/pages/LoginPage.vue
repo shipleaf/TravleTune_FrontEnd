@@ -11,8 +11,8 @@
         </div>
 
         <div class="left-center">
-          <h2 class="left-title">Effortlessly manage your team and operations.</h2>
-          <p class="left-desc">Log in to access your CRM dashboard and manage your team.</p>
+          <h2 class="left-title">TravleTune에 오신 것을 환영합니다</h2>
+          <p class="left-desc">여행과 음악으로 채워지는 순간을 시작해 보세요.</p>
         </div>
       </div>
     </aside>
@@ -252,10 +252,11 @@ $bg: #ffffff;
     z-index: 1;
     height: 100%;
     padding: 48px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    display: grid;
+    place-items: center;
+    text-align: center;
   }
+
 
   .brand {
     display: flex;

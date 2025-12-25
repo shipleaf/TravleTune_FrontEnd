@@ -9,11 +9,15 @@
     >
       <span>{{ index + 1 }}</span>
       <img :src="track.albumImage" />
+      <div class="box-meta">
+        <div class="box-title">{{ track.title }}</div>
+        <div class="box-artist">{{ track.artist }}</div>
+      </div>
     </div>
 
     <div class="controls">
       <button class="prev" @click="handlePrev">
-        <span>Next album</span>
+        <!-- <span>Next album</span> -->
         <svg viewBox="0 0 448 512" width="100" title="Next Album">
           <path
             d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"
@@ -21,7 +25,7 @@
         </svg>
       </button>
       <button class="next" @click="handleNext">
-        <span>Previous album</span>
+        <!-- <span>Previous album</span> -->
         <svg viewBox="0 0 448 512" width="100" title="Previous Album">
           <path
             d="M424.4 214.7L72.4 6.6C43.8-10.3 0 6.1 0 47.9V464c0 37.5 40.7 60.1 72.4 41.3l352-208c31.4-18.5 31.5-64.1 0-82.6z"
@@ -359,6 +363,35 @@ onBeforeUnmount(() => {
   height: 44px;
   width: 20vmin;
   z-index: 300;
+}
+
+.box-meta {
+  position: absolute;
+  left: 0;
+  top: -48px; /* 앨범 아래로 살짝 */
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.box-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.box-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 button {

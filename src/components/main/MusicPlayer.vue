@@ -101,17 +101,35 @@ const moodConfig = {
   healing: {
     accent: '163, 177, 138',
     tracks: [
-      { title: 'Quiet Morning', artist: 'Free Library', src: '/audio/healing-01.mp3' },
-      { title: 'Soft Breeze', artist: 'Free Library', src: '/audio/healing-02.mp3' },
+      {
+        title: 'apart',
+        artist: 'sumu',
+        album_image: '/src/assets/album/sumu.jpg',
+        src: '/src/assets/music/sumu - apart [NCS Release].mp3',
+      },
     ],
   },
   fresh: {
     accent: '126, 214, 223',
-    tracks: [{ title: 'Sunny Walk', artist: 'Free Library', src: '/audio/fresh-01.mp3' }],
+    tracks: [
+      {
+        title: 'Magnetic',
+        artist: 'springs!',
+        album_image: '/src/assets/album/springs!.jpg',
+        src: '/src/assets/music/springs! - Magnetic [NCS Release].mp3',
+      },
+    ],
   },
   emo: {
     accent: '108, 99, 255',
-    tracks: [{ title: 'Late Night', artist: 'Free Library', src: '/audio/emotion-01.mp3' }],
+    tracks: [
+      {
+        title: 'No Way',
+        artist: 'BIMINI, Avi Snow',
+        album_image: '/src/assets/album/BIMIBI.jpg',
+        src: '/src/assets/music/BIMINI, Avi Snow - No Way (with Avi Snow) [NCS Release].mp3',
+      },
+    ],
   },
   energy: {
     accent: '239, 35, 60',
@@ -126,7 +144,7 @@ const moodConfig = {
   },
 }
 
-const selectedMood = ref('healing')
+const selectedMood = ref(null)
 const title = ref('재생할 곡을 선택해 주세요')
 const artist = ref('TravelTune')
 const album_image = ref('')
@@ -142,9 +160,35 @@ const spotifyStore = useSpotifyStore()
 const { accessToken } = storeToRefs(spotifyStore)
 
 const barStyle = computed(() => {
-  const accent = moodConfig[selectedMood.value]?.accent ?? '255,255,255'
-  return { '--accent': accent }
+  const accent = moodConfig[selectedMood.value]?.accent
+  if (!accent) {
+    return {
+      '--accent': '255,255,255',
+      background: 'rgba(10,10,12,0.92)',
+      borderColor: 'rgba(255,255,255,0.08)',
+      boxShadow: '0 18px 55px rgba(0,0,0,0.35), 0 2px 0 rgba(255,255,255,0.04) inset',
+    }
+  }
+  return {
+    '--accent': accent,
+    background: `radial-gradient(circle at 16% 18%, rgba(${accent},0.18), rgba(${accent},0.08) 32%, rgba(10,10,12,0.9))`,
+    borderColor: `rgba(${accent},0.25)`,
+    boxShadow: `0 18px 55px rgba(${accent},0.25), 0 2px 0 rgba(255,255,255,0.04) inset`,
+  }
 })
+
+const applyThemeVars = () => {
+  const accent = moodConfig[selectedMood.value]?.accent
+  const fallbackAccent = '0,0,0'
+  const useAccent = accent || fallbackAccent
+  const soft = accent ? `rgba(${useAccent},0.10)` : 'rgba(0,0,0,0)'
+  const strong = accent ? `rgba(${useAccent},0.18)` : 'rgba(0,0,0,0)'
+  const root = document.documentElement
+  if (!root?.style) return
+  root.style.setProperty('--mood-accent-rgb', useAccent)
+  root.style.setProperty('--mood-glow-soft', soft)
+  root.style.setProperty('--mood-glow-strong', strong)
+}
 
 const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
@@ -175,6 +219,7 @@ const playTrack = async (track) => {
 
 const selectMood = async (mood) => {
   selectedMood.value = mood
+  applyThemeVars()
   const list = moodConfig[mood]?.tracks ?? []
   if (!list.length) return
   await playTrack(pickRandom(list))
@@ -361,8 +406,11 @@ watch(
   },
 )
 
+watch(selectedMood, () => applyThemeVars())
+
 onMounted(() => {
   applyAudioSettings()
+  applyThemeVars()
 })
 </script>
 

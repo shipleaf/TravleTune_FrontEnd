@@ -110,9 +110,43 @@
           </div>
 
           <div class="sheet-body">
-            <!-- ✅ 여기에 나중에 분리한 컴포넌트 끼우기 -->
-            <!-- <PlaceAddPanel :trip-id="props.tripId" :day="activeDay" @done="closeAddSheet" /> -->
-            <div class="sheet-placeholder">(PlaceAddPanel 컴포넌트 자리)</div>
+            <div class="search-row">
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="search-input"
+                placeholder="관광지 이름을 입력하세요"
+                @keyup.enter="searchSpots"
+              />
+              <button class="search-btn" type="button" @click="searchSpots">검색</button>
+            </div>
+
+            <div v-if="searchError" class="state">{{ searchError }}</div>
+            <div v-else-if="recError && !searchQuery" class="state">{{ recError }}</div>
+            <div v-else-if="searchLoading || recLoading" class="state">불러오는 중...</div>
+
+            <div v-else class="spot-list">
+              <div v-if="!showList.length" class="state">
+                {{ searchQuery ? '검색 결과가 없습니다.' : '추천 관광지가 없습니다.' }}
+              </div>
+              <div
+                v-else
+                v-for="spot in showList"
+                :key="spot.attraction_id || spot.id"
+                class="spot-card"
+              >
+                <div class="thumb" v-if="spot.image_url || spot.image">
+                  <img :src="spot.image_url || spot.image" alt="" />
+                </div>
+                <div class="spot-text">
+                  <div class="spot-title">{{ spot.title }}</div>
+                  <div class="spot-addr">
+                    {{ spot.sido_name || spot.addr1 }} {{ spot.gungu_name || spot.addr2 }}
+                  </div>
+                </div>
+                <button class="spot-add" type="button">추가</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -124,6 +158,8 @@
 import { computed, watch, onBeforeUnmount, ref } from 'vue'
 import { getItinerariesMock } from '@/api/tripApi'
 import { useTripSelectionStore } from '@/stores/tripSelection'
+import axiosApi from '@/api/axiosApi'
+import { fetchSpots } from '@/api/attractions'
 const selStore = useTripSelectionStore()
 
 const onClickPlace = (place) => {
@@ -143,8 +179,22 @@ const isAddOpen = ref(false)
 
 const sheetHeight = computed(() => '78%')
 
+const searchQuery = ref('')
+const searchLoading = ref(false)
+const recLoading = ref(false)
+const recommendations = ref([])
+const searchResults = ref([])
+const searchError = ref('')
+const recError = ref('')
+const tripSidoId = computed(() => props.tripDetail?.sido_id ?? null)
+const tripGunguId = computed(() => props.tripDetail?.gungu_id ?? null)
+const itineraryId = computed(() => props.tripDetail?.trip_id ?? null)
+
 const openAddSheet = () => {
   isAddOpen.value = true
+  if (!searchQuery.value) {
+    loadRecommendations()
+  }
 }
 
 const closeAddSheet = () => {
@@ -246,6 +296,53 @@ const onDragEnd = () => {
   draggedId.value = null
   dragFromIndex.value = -1
 }
+
+const showList = computed(() => (searchQuery.value ? searchResults.value : recommendations.value))
+
+const loadRecommendations = async () => {
+  if (!itineraryId.value || !tripSidoId.value || !tripGunguId.value) return
+  recLoading.value = true
+  recError.value = ''
+  try {
+    const res = await axiosApi.get(
+      `/itineraries/${itineraryId.value}/attraction-recommendations`,
+      {
+        params: {
+          sido_id: tripSidoId.value,
+          gungu_id: tripGunguId.value,
+        },
+      },
+    )
+    const data = res?.data?.data ?? []
+    recommendations.value = data
+  } catch (e) {
+    recError.value = '추천을 불러오지 못했습니다.'
+    recommendations.value = []
+  } finally {
+    recLoading.value = false
+  }
+}
+
+const searchSpots = async () => {
+  if (!searchQuery.value.trim()) {
+    searchResults.value = []
+    return
+  }
+  searchLoading.value = true
+  searchError.value = ''
+  try {
+    const res = await fetchSpots({
+      title: searchQuery.value.trim(),
+      size: 10,
+    })
+    searchResults.value = res?.data?.data?.attractions ?? res?.data?.data ?? []
+  } catch (e) {
+    searchError.value = '검색에 실패했습니다.'
+    searchResults.value = []
+  } finally {
+    searchLoading.value = false
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -346,12 +443,95 @@ const onDragEnd = () => {
   padding: 14px;
 }
 
-.sheet-placeholder {
-  padding: 14px;
-  border-radius: 12px;
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.search-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(70, 160, 255, 0.9);
+  color: #fff;
+  cursor: pointer;
+}
+
+.state {
+  padding: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
-  opacity: 0.85;
   font-size: 13px;
+}
+
+.spot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spot-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spot-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.spot-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spot-addr {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.spot-add {
+  border: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(70, 160, 255, 0.85);
+  color: #fff;
+  cursor: pointer;
 }
 .sidebar {
   width: 100%;
