@@ -134,6 +134,7 @@ const route = useRoute()
 const router = useRouter()
 
 const activeTab = ref('home')
+let mePromise = null
 
 const syncTabWithRoute = () => {
   if (route.path.startsWith('/music')) activeTab.value = 'music'
@@ -177,7 +178,8 @@ const onDocClick = () => {
 
 onMounted(async () => {
   try {
-    const res = await me()
+    if (!mePromise) mePromise = me()
+    const res = await mePromise
     myData.value = res.data
     document.addEventListener('click', onDocClick)
   } catch {

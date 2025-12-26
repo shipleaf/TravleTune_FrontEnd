@@ -36,7 +36,7 @@ import TravelPlanning from '@/components/plan/TravelPlanning.vue'
 
 .app-main {
   width: 100%;
-  padding: 0 20%;
+  padding: 24px 20%;
   display: flex;
   flex-direction: column;
   min-height: 0;

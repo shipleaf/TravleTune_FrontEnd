@@ -252,13 +252,18 @@ $bg: #ffffff;
     z-index: 1;
     height: 100%;
     padding: 48px;
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
   }
 
 
   .brand {
+    position: absolute;
+    top: 32px;
+    left: 32px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -276,6 +281,7 @@ $bg: #ffffff;
     flex: 1;
     display: flex;
     flex-direction: column;
+    align-items: center;
     justify-content: center;
     gap: 16px;
 

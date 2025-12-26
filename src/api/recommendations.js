@@ -1,13 +1,12 @@
 import axiosApi from './axiosApi'
 
 // 실제 API 호출: 이미지 파일(FormData) 전송
-export function postMoodRecommendations(file) {
+export function postMoodRecommendations({ image, prompt }) {
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('image', image) // ✅ 서버가 요구하는 키: image
+  if (prompt) formData.append('prompt', prompt)
 
-  return axiosApi.post('/recommendations', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  return axiosApi.post('/recommendations', formData) // ✅ headers 강제 지정 X
 }
 
 // 목업 API: 실제 요청 대신 샘플 데이터를 반환

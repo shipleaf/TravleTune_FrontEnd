@@ -294,9 +294,9 @@ $page-blue: oklch(0.75 0.15 195);
 .page {
   width: 100%;
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.14), transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.12), transparent 42%),
-    #05070c;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.14), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(236, 72, 153, 0.12), transparent 42%), #05070c;
   color: #fff;
   display: flex;
   align-items: center;

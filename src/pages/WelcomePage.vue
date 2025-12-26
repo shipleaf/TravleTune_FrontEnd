@@ -162,16 +162,26 @@ import { gsap } from 'gsap'
 
 const showIntro = ref(true)
 const isSkeleton = ref(false)
+let skeletonTimer = null
 
 const onIntroPhase = (phase) => {
   if (phase === 'shrink') {
-    isSkeleton.value = true
+    startSkeletonTimer()
   }
 }
 
 const onIntroFinished = () => {
   showIntro.value = false
-  isSkeleton.value = false
+  startSkeletonTimer()
+}
+
+const startSkeletonTimer = () => {
+  if (skeletonTimer) clearTimeout(skeletonTimer)
+  isSkeleton.value = true
+  skeletonTimer = setTimeout(() => {
+    isSkeleton.value = false
+    skeletonTimer = null
+  }, 12000)
 }
 const fileInputRef = ref(null)
 const textareaRef = ref(null)
@@ -348,6 +358,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  if (skeletonTimer) clearTimeout(skeletonTimer)
 })
 </script>
 
@@ -418,8 +429,16 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(circle at 18% 0%, var(--mood-glow-soft, rgba(34, 197, 94, 0.1)), transparent 36%),
-    radial-gradient(circle at 82% 6%, var(--mood-glow-soft, rgba(34, 197, 94, 0.1)), transparent 36%),
+    radial-gradient(
+      circle at 18% 0%,
+      var(--mood-glow-soft, rgba(34, 197, 94, 0.1)),
+      transparent 36%
+    ),
+    radial-gradient(
+      circle at 82% 6%,
+      var(--mood-glow-soft, rgba(34, 197, 94, 0.1)),
+      transparent 36%
+    ),
     linear-gradient(180deg, #0b0f18 0%, #05070e 55%, #04060c 100%);
 }
 

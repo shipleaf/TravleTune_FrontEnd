@@ -6,7 +6,7 @@
     <div class="map-attractions-container">
       <div class="sidebar">
         <TripDetailSidebar
-          :trip-id="Number(route.params.trip_id)"
+          :trip-id="Number(route.params.plan_id)"
           :trip-detail="tripDetail"
           :loading="isLoading"
           :error-msg="errorMsg"
@@ -25,7 +25,7 @@ import HeaderBar from '@/components/common/HeaderBar.vue'
 import TripDetailSidebar from '@/components/plan/TripDetailSidebar.vue'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getTripDetailMock } from '@/api/tripApi'
+import { getTripDetailMock as getTripDetail } from '@/api/tripApi'
 import TripKakaoMap from '@/components/plan/TripKakaoMap.vue'
 
 const route = useRoute()
@@ -44,10 +44,9 @@ const fetchTripDetail = async (tripId) => {
   isLoading.value = true
   errorMsg.value = ''
   try {
-    const res = await getTripDetailMock(tripId)
-    console.log(res.data)
-    if (!res.success) throw new Error(res.error?.message ?? 'detail fetch fail')
-    tripDetail.value = res.data
+    const res = await getTripDetail(tripId)
+    const data = res?.data?.data ?? res?.data
+    tripDetail.value = data
   } catch (e) {
     tripDetail.value = null
     errorMsg.value = e?.message ?? '에러가 발생했습니다.'
@@ -60,7 +59,7 @@ watch(
   () => route.params.plan_id,
   (tripId) => {
     if (!tripId) return
-    fetchTripDetail(tripId)
+    fetchTripDetail(Number(tripId))
   },
   { immediate: true },
 )

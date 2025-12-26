@@ -304,15 +304,12 @@ const loadRecommendations = async () => {
   recLoading.value = true
   recError.value = ''
   try {
-    const res = await axiosApi.get(
-      `/itineraries/${itineraryId.value}/attraction-recommendations`,
-      {
-        params: {
-          sido_id: tripSidoId.value,
-          gungu_id: tripGunguId.value,
-        },
+    const res = await axiosApi.get(`/itineraries/${itineraryId.value}/attraction-recommendations`, {
+      params: {
+        sido_id: tripSidoId.value,
+        gungu_id: tripGunguId.value,
       },
-    )
+    })
     const data = res?.data?.data ?? []
     recommendations.value = data
   } catch (e) {

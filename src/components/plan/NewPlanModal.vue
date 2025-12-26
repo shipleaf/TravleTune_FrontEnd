@@ -235,6 +235,7 @@ const createTrip = async () => {
     // 초대 멤버 처리(별도 API가 있다면 여기서)
     console.log('createTrip success:', res?.data)
 
+    emit('accept', res?.data?.data ?? null)
     // 모달 닫기 + 초기화
     close()
   } catch (error) {

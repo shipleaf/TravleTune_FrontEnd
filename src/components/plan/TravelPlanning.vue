@@ -44,7 +44,7 @@
     <section class="travel-section">
       <h2 class="travel-section__title travel-section__title--with-gap">지난 일정</h2>
 
-      <p v-if="pastTrips.length === 0" class="muted">No past trips yet.</p>
+      <p v-if="pastTrips.length === 0" class="muted">지난 일정이 없습니다.</p>
 
       <div v-else class="trip-grid">
         <TripCard
@@ -64,13 +64,14 @@ import { ref, computed, onMounted } from 'vue'
 import TripCard from './TripCard.vue'
 import { Plus } from 'lucide-vue-next'
 import NewPlanModal from './NewPlanModal.vue'
-import { getTripImageMock, getTripsMock } from '@/api/tripApi'
+import { getTripImageMock, getTripsMock as getTrips } from '@/api/tripApi'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 const trips = ref([])
 const open = ref(false)
+const todayTs = new Date().setHours(0, 0, 0, 0)
 
 const movePlanDetail = (tripId) => {
   router.push({
@@ -79,33 +80,44 @@ const movePlanDetail = (tripId) => {
   })
 }
 
-// TODO: 이미지 렌더링 최적화
-const todayTs = new Date().setHours(0, 0, 0, 0)
-
 const pastTrips = computed(() => trips.value.filter((t) => t._endTs < todayTs))
 const upcomingTrips = computed(() => trips.value.filter((t) => t._startTs >= todayTs))
 
-onMounted(async () => {
-  const res = await getTripsMock()
+const fetchTrips = async () => {
+  try {
+    const res = await getTrips()
+    const rows = res?.data?.data ?? res?.data ?? []
 
-  console.log(res)
+    const base = rows.map((t) => ({
+      ...t,
+      _startTs: Date.parse(t.start_date),
+      _endTs: Date.parse(t.end_date),
+    }))
 
-  // const base = res.data.data.map((t) => ({
-  const base = res.data.map((t) => ({
-    ...t,
-    _startTs: Date.parse(t.start_date),
-    _endTs: Date.parse(t.end_date),
-  }))
+    const withImages = await Promise.all(
+      base.map(async (trip) => {
+        const imageRes = await getTripImageMock(trip.trip_id)
+        return { ...trip, image: imageRes.data.image_url }
+      }),
+    )
 
-  const withImages = await Promise.all(
-    base.map(async (trip) => {
-      const imageRes = await getTripImageMock(trip.trip_id)
-      return { ...trip, image: imageRes.data.image_url }
-    }),
-  )
+    trips.value = withImages
+  } catch (error) {
+    console.error('Failed to load trips', error)
+    trips.value = []
+  }
+}
 
-  trips.value = withImages
-})
+const onAccept = async () => {
+  open.value = false
+  await fetchTrips()
+}
+
+const onDecline = () => {
+  open.value = false
+}
+
+onMounted(fetchTrips)
 </script>
 
 <style lang="scss" scoped>

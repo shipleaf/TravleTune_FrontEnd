@@ -236,7 +236,7 @@ export const getTripsMock = () => {
 
 export const getTripDetail = (tripId) => {
   return axiosApi({
-    url: `/api/v1/trips/${tripId}`,
+    url: `/trips/${tripId}`,
     method: 'get',
     withCredentials: true,
   })
@@ -244,7 +244,7 @@ export const getTripDetail = (tripId) => {
 
 export const getTripImage = (tripId) => {
   return axiosApi({
-    url: `/api/v1/trips/${tripId}/image`,
+    url: `/trips/${tripId}/image`,
     method: 'get',
     withCredentials: true,
   })
@@ -252,7 +252,7 @@ export const getTripImage = (tripId) => {
 
 export const getItineraries = ({ trip_id, day_number }) => {
   return axiosApi({
-    url: '/api/v1/itineraries',
+    url: '/itineraries',
     method: 'get',
     params: { trip_id, day_number },
     withCredentials: true,
@@ -261,7 +261,7 @@ export const getItineraries = ({ trip_id, day_number }) => {
 
 export const getItineraryDetail = (itineraryId) => {
   return axiosApi({
-    url: `/api/v1/itineraries/${itineraryId}`,
+    url: `/itineraries/${itineraryId}`,
     method: 'get',
     withCredentials: true,
   })

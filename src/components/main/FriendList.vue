@@ -24,7 +24,12 @@
         </div>
 
         <div v-for="r in receivedRequests" :key="r.friend_id" class="row" role="listitem">
-          <img :src="r.profile_image || defaultAvatar" alt="profile" class="avatar" />
+          <template v-if="r.profile_image">
+            <img :src="r.profile_image" alt="profile" class="avatar" />
+          </template>
+          <div v-else class="avatar avatar--fallback">
+            <span class="avatar-initial">{{ getInitial(r.nickname) }}</span>
+          </div>
           <div class="row-info">
             <div class="row-title">{{ r.nickname }}</div>
             <div class="row-sub">요청 · {{ formatDate(r.created_at) }}</div>
@@ -57,7 +62,12 @@
         </div>
 
         <div v-for="f in friends" :key="f.friend_id" class="row" role="listitem">
-          <img :src="f.profile_image || defaultAvatar" alt="profile" class="avatar" />
+          <template v-if="f.profile_image">
+            <img :src="f.profile_image" alt="profile" class="avatar" />
+          </template>
+          <div v-else class="avatar avatar--fallback">
+            <span class="avatar-initial">{{ getInitial(f.nickname) }}</span>
+          </div>
           <div class="row-info">
             <div class="row-title">{{ f.nickname }}</div>
             <div class="row-sub" v-if="f.member_id">member_id: {{ f.member_id }}</div>
@@ -81,7 +91,13 @@ const reqLoading = ref(false)
 const friendsLoading = ref(false)
 const reqError = ref('')
 const friendsError = ref('')
-const defaultAvatar = 'https://via.placeholder.com/40?text=F'
+
+const getInitial = (name) => {
+  if (!name) return '?'
+  const t = name.trim()
+  if (!t) return '?'
+  return t.slice(0, 1)
+}
 
 const loadReceivedRequests = async () => {
   reqLoading.value = true
@@ -278,6 +294,18 @@ onMounted(async () => {
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.08);
+}
+
+.avatar--fallback {
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #0b0f1a;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.75), rgba(56, 189, 248, 0.85));
+}
+
+.avatar-initial {
+  font-size: 14px;
 }
 
 .row-info {
